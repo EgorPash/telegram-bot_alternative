@@ -1,3 +1,4 @@
+# Основной файл для запуска тг-бота
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from config import BOT_TOKEN
 from telegram.error import BadRequest
