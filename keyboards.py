@@ -1,3 +1,4 @@
+# Файл, генерирующий клавиатуры
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 import json
 
