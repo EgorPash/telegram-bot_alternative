@@ -57,19 +57,6 @@ async def button_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
 
-# Обработчик кнопки "Подробнее" о враче (главное меню)
-async def button_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    doctor_key = query.data.replace('detail_doctor_', '')
-    doctor_data = data['specialists']['doctors'][doctor_key]
-
-    text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
-    keyboard = doctor_description_keyboard(doctor_key)
-    await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
-
-
 # Обработчик выбора "Специалисты" внутри "Услуг"
 async def button_service_specialists(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -187,6 +174,18 @@ async def button_direction_detail(update: Update, context: ContextTypes.DEFAULT_
     keyboard = direction_description_keyboard(direction_key)
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
+# Обработчик для кнопки "Подробнее" в описании направления
+async def button_direction_more_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    direction_key = query.data.replace('more_detail_direction_', '')
+    direction_data = data['directions']['directions_list'][direction_key]
+
+    text = f"*{direction_data['name']}*\n\n{direction_data['detailed_description']}"
+    keyboard = direction_detailed_description_keyboard(direction_key)
+    await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
+
 
 # Обработчик кнопки "Назад"
 async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -231,6 +230,14 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif back_to == 'service_procedures':
         text = data['procedures']['title']
         keyboard = service_procedures_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to.startswith('direction_'):
+        direction_key = back_to.replace('direction_', '')
+        direction_data = data['directions']['directions_list'][direction_key]
+
+        text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
+        keyboard = direction_description_keyboard(direction_key)
         await query.edit_message_text(text, reply_markup=keyboard)
 
 
