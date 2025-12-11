@@ -43,7 +43,6 @@ def main() -> None:
 
     # Обработчики нажатий на inline-кнопки
     application.add_handler(CallbackQueryHandler(button_doctor, pattern="^doctor_"))
-    application.add_handler(CallbackQueryHandler(button_doctor_detail, pattern="^detail_doctor_"))
     application.add_handler(CallbackQueryHandler(button_service_specialists, pattern="^service_specialists$"))
     application.add_handler(CallbackQueryHandler(button_specialization, pattern="^specialization_"))
     application.add_handler(CallbackQueryHandler(button_service_doctor, pattern="^service_doctor_"))
@@ -52,6 +51,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_procedure, pattern="^procedure_"))
     application.add_handler(CallbackQueryHandler(button_direction, pattern="^direction_"))
     application.add_handler(CallbackQueryHandler(button_direction_detail, pattern="^detail_direction_"))
+    application.add_handler(CallbackQueryHandler(button_direction_more_detail, pattern="^more_detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))
     application.add_handler(CallbackQueryHandler(button_back, pattern="^back_"))
 
