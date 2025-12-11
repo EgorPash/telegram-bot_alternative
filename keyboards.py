@@ -127,7 +127,17 @@ def direction_detail_keyboard(direction_key):
 # Клавиатура для описания направления (Записаться и Назад)
 def direction_description_keyboard(direction_key):
     keyboard = [
-        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")],
+        [
+            InlineKeyboardButton("📖 Подробнее", callback_data=f"more_detail_direction_{direction_key}"),
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")
+        ],
         [InlineKeyboardButton("◀️ Назад", callback_data="back_directions")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def direction_detailed_description_keyboard(direction_key):
+    keyboard = [
+        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_direction_{direction_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
