@@ -1,9 +1,13 @@
 # Основной файл для запуска тг-бота
+import os
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
-from config import BOT_TOKEN
+from dotenv import load_dotenv
 from telegram.error import BadRequest
 from handlers import *
 import logging
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Включим логирование, чтобы видеть ошибки
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
