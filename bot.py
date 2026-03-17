@@ -33,7 +33,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main() -> None:
     """Запуск бота."""
     # Создаем Application и передаем ему токен
-    application = Application.builder().token(BOT_TOKEN).build()
+    application = Application.builder().token(BOT_TOKEN1).build()
 
     # Обработчики команд
     application.add_error_handler(error_handler)
