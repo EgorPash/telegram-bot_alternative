@@ -7,7 +7,7 @@ from handlers import *
 import logging
 
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN1 = os.getenv("BOT_TOKEN1")
 
 # Включим логирование, чтобы видеть ошибки
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
