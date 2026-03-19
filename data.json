@@ -9,7 +9,7 @@
       "trofimova": {
         "name": "Трофимова Екатерина Сергеевна",
         "specialization": "Невролог",
-        "photo": "photos/doctors/trofimova.jpg"
+        "photo": "photos/doctors/trofimova.png"
       },
       "malygina": {
         "name": "Малыгина Наталия Алексеевна",
@@ -175,9 +175,9 @@
       "title": "Неврологи",
       "doctors": {
         "trofimova": {
-         "name": "Трофимова Екатерина Сергеевна",
-         "specialization": "Невролог",
-         "description": "Врач-невролог. Член коалиции здоровья стран БРИКС, член ассоциации заслуженных врачей и наставников РФ.",
+          "name": "Трофимова Екатерина Сергеевна",
+          "specialization": "Невролог",
+          "description": "Врач-невролог. Член коалиции здоровья стран БРИКС, член ассоциации заслуженных врачей и наставников РФ.",
           "photo": "photos/doctors/trofimova.png"
        },
         "mansurova": {

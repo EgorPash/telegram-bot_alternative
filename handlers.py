@@ -46,7 +46,6 @@ async def website(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- Обработчики CallbackQuery (нажатия на inline-кнопки) ---
 
 # Обработчик выбора врача из специалистов (главное меню)
-# Обработчик выбора врача из специалистов (главное меню)
 async def button_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -140,23 +139,38 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
 async def button_service_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
-    # Получаем ключ врача
     doctor_key = query.data.replace('detail_service_doctor_', '')
-
-    # Ищем врача во всех специализациях
     doctor_data = None
+
     for specialization in data['specializations'].values():
         if doctor_key in specialization['doctors']:
             doctor_data = specialization['doctors'][doctor_key]
             break
 
     if doctor_data:
+        photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
+
         keyboard = service_doctor_description_keyboard(doctor_key)
-        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
+
+        if photo_path and os.path.exists(photo_path):
+            with open(photo_path, 'rb') as photo:
+                await query.message.reply_photo(
+                    photo=photo,
+                    caption=text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            await query.message.delete()
+        else:
+            await query.edit_message_text(
+                text + "\n\n📷 *Фотография не найдена*",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
     else:
         await query.edit_message_text("Данные о враче не найдены.")
+
 
 
 # Обработчик выбора "Процедуры" внутри "Услуг"
