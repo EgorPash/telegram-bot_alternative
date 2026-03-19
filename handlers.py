@@ -1,7 +1,7 @@
 # Файл с обработчками команд и сообщений
 import logging
 import os
-from telegram import Update, InputMediaPhoto
+from telegram import Update
 from telegram.ext import ContextTypes
 import json
 from keyboards import *
@@ -261,45 +261,65 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     back_to = query.data.replace('back_', '')
 
-    if back_to == 'main_menu':
+    try:
+        if back_to == 'main_menu':
+            await query.delete_message()
+            text = data['start_message']
+            reply_keyboard = main_menu_keyboard()
+            await query.message.reply_text(text, reply_markup=reply_keyboard)
+
+        elif back_to == 'specialists':
+            text = data['specialists']['title']
+            keyboard = specialists_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif back_to == 'services':
+            text = data['services']['title']
+            keyboard = services_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif back_to == 'directions':
+            text = data['directions']['title']
+            keyboard = directions_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif back_to == 'service_specializations':
+            text = "Выберите специализацию:"
+            keyboard = service_specializations_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif back_to == 'service_procedures':
+            text = data['procedures']['title']
+            keyboard = service_procedures_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif back_to.startswith('direction_'):
+            direction_key = back_to.replace('direction_', '')
+            if direction_key in data['directions']['directions_list']:
+                direction_data = data['directions']['directions_list'][direction_key]
+                text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
+                keyboard = direction_description_keyboard(direction_key)
+                await query.edit_message_text(
+                    text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            else:
+                text = data['directions']['title']
+                keyboard = directions_keyboard()
+                await query.edit_message_text(text, reply_markup=keyboard)
+        else:
+            await query.delete_message()
+            text = data['start_message']
+            reply_keyboard = main_menu_keyboard()
+            await query.message.reply_text(text, reply_markup=reply_keyboard)
+
+    except Exception as e:
+        logger.error(f"Ошибка при обработке кнопки Назад: {e}")
+        await query.delete_message()
         text = data['start_message']
-        # Для главного меню используем reply-клавиатуру, а не inline
         reply_keyboard = main_menu_keyboard()
         await query.message.reply_text(text, reply_markup=reply_keyboard)
-        await query.delete_message()
-
-    elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'services':
-        text = data['services']['title']
-        keyboard = services_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'directions':
-        text = data['directions']['title']
-        keyboard = directions_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'service_specializations':
-        text = "Выберите специализацию:"
-        keyboard = service_specializations_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'service_procedures':
-        text = data['procedures']['title']
-        keyboard = service_procedures_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to.startswith('direction_'):
-        direction_key = back_to.replace('direction_', '')
-        direction_data = data['directions']['directions_list'][direction_key]
-
-        text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
-        keyboard = direction_description_keyboard(direction_key)
-        await query.edit_message_text(text, reply_markup=keyboard)
 
 
 # Общий обработчик для всех кнопок "Записаться"
