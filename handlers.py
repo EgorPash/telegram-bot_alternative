@@ -228,7 +228,11 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.delete()
 
     elif back_to == 'specialists':
-        # Возвращаемся к списку врачей (не к заголовку, а к клавиатуре)
+        text = data['specialists']['title']
+        keyboard = specialists_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'specialists_list':
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
@@ -255,7 +259,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Возврат к списку врачей специализации из карточки врача (в разделе "Услуги")
     elif back_to.startswith('service_specialization_'):
-        specialization_key = back_to.replace('service_specialization_', '')
+        specialization_key = back_to.replace('back_service_specialization_', '')
         if specialization_key in data['specializations']:
             specialization_data = data['specializations'][specialization_key]
             text = f"Выберите врача ({specialization_data['title']}):"
