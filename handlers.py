@@ -1,7 +1,6 @@
 # Файл с обработчками команд и сообщений
 import os
-from telegram import InputMediaPhoto
-from telegram import Update
+from telegram import Update, InputMediaPhoto
 from telegram.ext import ContextTypes
 import json
 from keyboards import *
@@ -12,52 +11,36 @@ with open('data.json', 'r', encoding='utf-8') as f:
 
 
 # Обработчик команды /start
-# Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = data['start_message']
+    clinic_paths = data['clinic_images']
+    contact_text = data['contact_numbers']
 
-    # Разделим текст на части: приветствие и контакты
-    lines = welcome_text.split('\n')
-    greeting = '\n'.join(lines[:3])
-    contacts = '\n'.join(lines[3:])
-
-    # Путь к папке с изображениями
-    clinic_photos_dir = 'photos/clinic/'
-    clinic_photos = [f for f in os.listdir(clinic_photos_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-    clinic_photos.sort()
-    if not clinic_photos:
-        # Если изображений нет — отправляем только текст
-        keyboard = main_menu_keyboard()
-        await update.message.reply_text(welcome_text, reply_markup=keyboard)
+    # Проверяем, что изображения существуют
+    valid_images = [path for path in clinic_paths if os.path.exists(path)]
+    if not valid_images:
+        await update.message.reply_text(welcome_text + "\n\n" + contact_text, reply_markup=main_menu_keyboard())
         return
 
-    # Инициализируем индекс текущего изображения
-    if 'clinic_photo_index' not in context.user_data:
-        context.user_data['clinic_photo_index'] = 0
+    # Создаём медиа-группу (первые 10 изображений)
+    media_group = []
+    for i, path in enumerate(valid_images):
+        with open(path, 'rb') as photo:
+            if i == 0:
+                media_group.append(InputMediaPhoto(media=photo, caption=welcome_text))
+            else:
+                media_group.append(InputMediaPhoto(media=photo))
 
-    current_index = context.user_data['clinic_photo_index']
-    photo_path = os.path.join(clinic_photos_dir, clinic_photos[current_index])
-
-    media_group = [
-        InputMediaPhoto(media=open(photo_path, 'rb'), caption=f"{greeting}\n\n{contacts}", parse_mode='Markdown')]
-
+    # Отправляем медиа-группу
     sent_message = await update.message.reply_media_group(media=media_group)
 
-    navigation_keyboard = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("◀️ Назад", callback_data="clinic_prev"),
-            InlineKeyboardButton(f"{current_index + 1}/{len(clinic_photos)}", callback_data="noop"),
-            InlineKeyboardButton("▶️ Вперёд", callback_data="clinic_next")
-        ]
-    ])
+    # Сохраняем индекс текущего изображения в контексте (для навигации)
+    context.user_data['clinic_index'] = 0
+    context.user_data['clinic_count'] = len(valid_images)
 
-    # Отправляем кнопки как отдельное сообщение
-    nav_msg = await update.message.reply_text("Используйте кнопки ниже для навигации", reply_markup=navigation_keyboard)
-
-    # Сохраняем ID сообщения с кнопками для последующего редактирования
-    context.user_data['nav_message_id'] = nav_msg.message_id
-    context.user_data['clinic_photos'] = clinic_photos
-    context.user_data['clinic_photos_dir'] = clinic_photos_dir
+    # Отправляем сообщение с контактами + кнопки навигации
+    keyboard = clinic_navigation_keyboard(0, len(valid_images))
+    await update.message.reply_text(contact_text, reply_markup=keyboard)
 
 
 # Обработчик текстового сообщения "Специалисты" (из главного меню)
@@ -332,3 +315,26 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     appointment_data = query.data.replace('appointment_', '')
     await query.message.reply_text("Функция записи будет реализована позже")
+
+# Обработчик навигации по галерее
+async def button_gallery_nav(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    direction = query.data.replace('clinic_', '')
+    current_index = context.user_data.get('clinic_index', 0)
+    total = context.user_data.get('clinic_count', 1)
+
+    if direction == 'prev' and current_index > 0:
+        context.user_data['clinic_index'] = current_index - 1
+        new_index = current_index - 1
+    elif direction == 'next' and current_index < total - 1:
+        context.user_data['clinic_index'] = current_index + 1
+        new_index = current_index + 1
+    else:
+        return
+
+    # Отправляем новое сообщение с контактами и обновлённой клавиатурой
+    contact_text = data['contact_numbers']
+    keyboard = gallery_navigation_keyboard(new_index, total)
+    await query.edit_message_text(contact_text, reply_markup=keyboard)

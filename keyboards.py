@@ -113,7 +113,7 @@ def directions_keyboard():
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для направления (Подробнее, Записаться и Назад)
+# Клавиатура для направления (Подробнее, записаться и Назад)
 def direction_detail_keyboard(direction_key):
     keyboard = [
         [
@@ -141,3 +141,19 @@ def direction_detailed_description_keyboard(direction_key):
         [InlineKeyboardButton("◀️ Назад", callback_data=f"back_direction_{direction_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+# Клавиатура для навигации по галерее
+def clinic_navigation_keyboard(current_index, total):
+    buttons = []
+    if current_index > 0:
+        buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data="clinic_prev"))
+    if current_index < total - 1:
+        buttons.append(InlineKeyboardButton("Вперёд ➡️", callback_data="clinic_next"))
+
+    if len(buttons) == 0:
+        return None
+    elif len(buttons) == 1:
+        return InlineKeyboardMarkup([[buttons[0]]])
+    else:
+        return InlineKeyboardMarkup([buttons])
