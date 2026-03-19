@@ -1,4 +1,5 @@
 # Файл с обработчками команд и сообщений
+import os
 from telegram import Update
 from telegram.ext import ContextTypes
 import json
@@ -45,17 +46,35 @@ async def website(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # --- Обработчики CallbackQuery (нажатия на inline-кнопки) ---
 
 # Обработчик выбора врача из специалистов (главное меню)
+# Обработчик выбора врача из специалистов (главное меню)
 async def button_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     doctor_key = query.data.replace('doctor_', '')
     doctor_data = data['specialists']['doctors'][doctor_key]
 
+    photo_path = doctor_data.get('photo')
     text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-    keyboard = doctor_detail_keyboard(doctor_key)
-    await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
+    keyboard = doctor_detail_keyboard(doctor_key)
+
+    if photo_path and os.path.exists(photo_path):
+        # Отправляем фото + текст как новое сообщение
+        with open(photo_path, 'rb') as photo:
+            await query.message.reply_photo(
+                photo=photo,
+                caption=text,
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+        # Удаляем старое сообщение с кнопками
+        await query.message.delete()
+    else:
+        await query.edit_message_text(
+            text + "\n\n📷 *Фотография не найдена*",
+            reply_markup=keyboard,
+            parse_mode='Markdown'
+        )
 
 # Обработчик выбора "Специалисты" внутри "Услуг"
 async def button_service_specialists(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -81,24 +100,39 @@ async def button_specialization(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 # Обработчик выбора врача из услуг
+# Обработчик выбора врача из услуг
 async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
-    # Получаем ключ врача
     doctor_key = query.data.replace('service_doctor_', '')
-
-    # Ищем врача во всех специализациях
     doctor_data = None
+
     for specialization in data['specializations'].values():
         if doctor_key in specialization['doctors']:
             doctor_data = specialization['doctors'][doctor_key]
             break
 
     if doctor_data:
+        photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+
         keyboard = service_doctor_detail_keyboard(doctor_key)
-        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
+
+        if photo_path and os.path.exists(photo_path):
+            with open(photo_path, 'rb') as photo:
+                await query.message.reply_photo(
+                    photo=photo,
+                    caption=text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            await query.message.delete()
+        else:
+            await query.edit_message_text(
+                text + "\n\n📷 *Фотография не найдена*",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
     else:
         await query.edit_message_text("Данные о враче не найдены.")
 

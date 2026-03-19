@@ -8,79 +8,98 @@
     "doctors": {
       "trofimova": {
         "name": "Трофимова Екатерина Сергеевна",
-        "specialization": "Невролог"
+        "specialization": "Невролог",
+        "photo": "photos/doctors/trofimova.jpg"
       },
       "malygina": {
         "name": "Малыгина Наталия Алексеевна",
-        "specialization": "Акушер-гинеколог"
+        "specialization": "Акушер-гинеколог",
+        "photo": "photos/doctors/malygina.png"
       },
       "yusupova": {
         "name": "Юсупова Алёна Анатольевна",
-        "specialization": "Терапевт"
+        "specialization": "Терапевт",
+        "photo": "photos/doctors/yusupova.png"
       },
       "mansurova": {
           "name": "Мансурова Ольга Леонидовна",
-          "specialization": "Невролог"
+          "specialization": "Невролог",
+          "photo": "photos/doctors/mansurova.png"
       },
       "korepanova": {
           "name": "Корепанова Анжела Павловна",
-          "specialization": "Невролог"
+          "specialization": "Невролог",
+          "photo": "photos/doctors/korepanova.png"
       },
       "mehonoshina": {
           "name": "Мехоношина Анна Алексеевна",
-          "specialization": "Детский нутрицолог, медсестра"
+          "specialization": "Детский нутрицолог, медсестра",
+          "photo": "photos/doctors/mehonoshina.png"
       },
       "gileva": {
         "name": "Гилева Инна Николаевна",
-        "specialization": "Врач общей практики(педиатрия, гериатрия, взрослое население)"
+        "specialization": "Врач общей практики(педиатрия, гериатрия, взрослое население)",
+        "photo": "photos/doctors/gileva.png"
       },
       "dracheva": {
         "name": "Драчева Анастасия Викторовна",
-        "specialization": "Cпециалист по натуральным методам оздоровления, фармацевт"
+        "specialization": "Cпециалист по натуральным методам оздоровления, фармацевт",
+        "photo": "photos/doctors/dracheva.png"
       },
       "valeeva": {
         "name": "Валеева Алия Галиевна",
-        "specialization": "Кардиолог, натуропат, гомеопат"
+        "specialization": "Кардиолог, натуропат, гомеопат",
+        "photo": "photos/doctors/valeeva.png"
       },
-      "goiko": {
+      "goyko": {
         "name": "Гойко Михаил Александрович",
-        "specialization": "Врач-терапевт, специалист по отказу от курения"
+        "specialization": "Врач-терапевт, специалист по отказу от курения",
+        "photo": "photos/doctors/goyko.png"
       },
       "chernousova": {
         "name": "Черноусова Альбина Васильевна",
-        "specialization": "Фельдшер"
+        "specialization": "Фельдшер",
+        "photo": "photos/doctors/chernousova.png"
       },
       "zhihareva": {
         "name": "Жихарева Людмила Алексеевна",
-        "specialization": "Врач-терапевт, гирудотерапевт"
+        "specialization": "Врач-терапевт, гирудотерапевт",
+        "photo": "photos/doctors/zhihareva.png"
       },
       "isakova-motina": {
         "name": "Исакова-Мотина Мария Андреевна",
-        "specialization": "Фельдшер, косметик-эстетист, массажист"
+        "specialization": "Фельдшер, косметик-эстетист, массажист",
+        "photo": "photos/doctors/isakova-motina.png"
       },
       "abasheva": {
         "name": "Абашева Наталия Михайловна",
-        "specialization": "Педиатр"
+        "specialization": "Педиатр",
+        "photo": "photos/doctors/abasheva.png"
       },
       "sobol": {
         "name": "Соболь Александр Андреевич",
-        "specialization": "Терапевт, гастроэнтеролог"
+        "specialization": "Терапевт, гастроэнтеролог",
+        "photo": "photos/doctors/sobol.png"
       },
       "maskaleva": {
         "name": "Маскалева Елена Леонидовна",
-        "specialization": "Психолог"
+        "specialization": "Психолог",
+        "photo": "photos/doctors/maskaleva.png"
       },
       "barishnikova": {
         "name": "Барышникова Наталья",
-        "specialization": "Физическая культура"
+        "specialization": "Физическая культура",
+        "photo": "photos/doctors/barishnikova.png"
       },
       "goldireva": {
         "name": "Голдырева Мария Александровна",
-        "specialization": "Кардиолог, гомеопат"
+        "specialization": "Кардиолог, гомеопат",
+        "photo": "photos/doctors/goldireva.png"
       },
       "strugova": {
           "name": "Стругова Екатерина Николаевна",
-          "specialization": "Логопед для детей и взрослых"
+          "specialization": "Логопед для детей и взрослых",
+          "photo": "photos/doctors/strugova.png"
       }
     }
   },
@@ -95,22 +114,26 @@
         "yusupova": {
           "name": "Юсупова Алёна Анатольевна",
           "specialization": "Терапевт",
-          "description": "Врач-терапевт, гомеопат, микроскопист, нутрицолог, флоратерапевт, дерматолог."
+          "description": "Врач-терапевт, гомеопат, микроскопист, нутрицолог, флоратерапевт, дерматолог.",
+          "photo": "photos/doctors/yusupova.png"
         },
         "goyko": {
           "name": "Гойко Михаил Александрович",
           "specialization": "Терапевт",
-          "description": "Врач-терапевт, специалист по отказу от курения."
+          "description": "Врач-терапевт, специалист по отказу от курения.",
+          "photo": "photos/doctors/goyko.png"
         },
         "zhikhareva": {
           "name": "Жихарева Людмила Алексеевна",
           "specialization": "Терапевт",
-          "description": "Врач-терапевт, гирудотерапевт, гомеопат, пульмонология, физиатрия."
+          "description": "Врач-терапевт, гирудотерапевт, гомеопат, пульмонология, физиатрия.",
+          "photo": "photos/doctors/zhikhareva.png"
         },
         "sobol": {
           "name": "Соболь Александр Андреевич",
           "specialization": "Терапевт",
-          "description": "Терапевт, гастроэнтеролог, кандидат медицинских наук."
+          "description": "Терапевт, гастроэнтеролог, кандидат медицинских наук.",
+          "photo": "photos/doctors/sobol.png"
         }
       }
     },
@@ -120,12 +143,14 @@
         "gileva": {
           "name": "Гилева Инна Николаевна",
           "specialization": "Педиатр",
-          "description": "Врач общей практики (педиатрия, гериатрия, взрослое население), врач УЗИ, гирудотерапевт, су-джок терапевт, гомеопат, натуропат, пульмонолог."
+          "description": "Врач общей практики (педиатрия, гериатрия, взрослое население), врач УЗИ, гирудотерапевт, су-джок терапевт, гомеопат, натуропат, пульмонолог.",
+          "photo": "photos/doctors/gileva.png"
         },
         "abasheva": {
           "name": "Абашева Наталья Михайловна",
           "specialization": "Педиатр",
-          "description": "Психолог, песочный терапевт, Sandplay-метод и интегративное направление, арт-терапевт, плассотерапевт."
+          "description": "Психолог, песочный терапевт, Sandplay-метод и интегративное направление, арт-терапевт, плассотерапевт.",
+          "photo": "photos/doctors/abasheva.png"
         }
       }
     },
@@ -135,12 +160,14 @@
         "valeeva": {
           "name": "Валеева Алия Галиевна",
           "specialization": "Кардиолог",
-          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук."
+          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук.",
+          "photo": "photos/doctors/valeeva.png"
         },
         "goldyreva": {
           "name": "Голдырева Мария Александровна",
           "specialization": "Кардиолог",
-          "description": "Кардиолог, гомеопат."
+          "description": "Кардиолог, гомеопат.",
+          "photo": "photos/doctors/goldyreva.png"
         }
       }
     },
@@ -148,14 +175,16 @@
       "title": "Неврологи",
       "doctors": {
         "trofimova": {
-        "name": "Трофимова Екатерина Сергеевна",
-        "specialization": "Невролог",
-        "description": "Врач-невролог. Член коалиции здоровья стран БРИКС, член ассоциации заслуженных врачей и наставников РФ."
+         "name": "Трофимова Екатерина Сергеевна",
+         "specialization": "Невролог",
+         "description": "Врач-невролог. Член коалиции здоровья стран БРИКС, член ассоциации заслуженных врачей и наставников РФ.",
+          "photo": "photos/doctors/trofimova.png"
        },
         "mansurova": {
           "name": "Мансурова Ольга Леонидовна",
           "specialization": "Невролог",
-          "description": "Невролог, мануальный терапевт, гомеопат."
+          "description": "Невролог, мануальный терапевт, гомеопат.",
+          "photo": "photos/doctors/mansurova.png"
         }
       }
     },
@@ -165,7 +194,8 @@
         "sobol": {
           "name": "Соболь Александр Андреевич",
           "specialization": "Терапевт",
-          "description": "Терапевт, гастроэнтеролог, кандидат медицинских наук."
+          "description": "Терапевт, гастроэнтеролог, кандидат медицинских наук.",
+          "photo": "photos/doctors/sobol.png"
         }
       }
     },
@@ -175,12 +205,14 @@
         "valeeva": {
           "name": "Валеева Алия Галиевна",
           "specialization": "Кардиолог",
-          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук."
+          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук.",
+          "photo": "photos/doctors/valeeva.png"
         },
         "goldyreva": {
           "name": "Голдырева Мария Александровна",
           "specialization": "Кардиолог",
-          "description": "Кардиолог, гомеопат."
+          "description": "Кардиолог, гомеопат.",
+          "photo": "photos/doctors/goldyreva.png"
         }
       }
     },
@@ -190,7 +222,8 @@
         "malygina": {
           "name": "Малыгина Наталия Алексеевна",
           "specialization": "Акушер-гинеколог",
-          "description": "Акушер-гинеколог, врач ультразвуковой диагностики."
+          "description": "Акушер-гинеколог, врач ультразвуковой диагностики.",
+          "photo": "photos/doctors/malygina.png"
         }
       }
     },
@@ -200,12 +233,14 @@
         "maskaleva": {
           "name": "Маскалева Елена Леонидовна",
           "specialization": "Психолог",
-          "description": "Психолог, песочный терапевт, Sandplay-метод и интегративное направление, арт-терапевт, плассотерапевт"
+          "description": "Психолог, песочный терапевт, Sandplay-метод и интегративное направление, арт-терапевт, плассотерапевт",
+          "photo": "photos/doctors/maskaleva.png"
         },
         "korepanova": {
           "name": "Корепанова Анжела Павловна",
           "specialization": "Невролог",
-          "description": "Психолог, психосамотолог, гипнотерапевт"
+          "description": "Психолог, психосамотолог, гипнотерапевт",
+          "photo": "photos/doctors/korepanova.png"
         }
       }
     },
@@ -215,12 +250,14 @@
         "valeeva": {
           "name": "Валеева Алия Галиевна",
           "specialization": "Кардиолог",
-          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук."
+          "description": "Врач-терапевт, гирудотерапевт, кардиолог, микроскопист, нутрициолог, кандидат медицинских наук.",
+          "photo": "photos/doctors/valeeva.png"
         },
         "goldyreva": {
           "name": "Голдырева Мария Александровна",
           "specialization": "Кардиолог",
-          "description": "Кардиолог, гомеопат."
+          "description": "Кардиолог, гомеопат.",
+          "photo": "photos/doctors/goldyreva.png"
         }
       }
     },
@@ -230,7 +267,8 @@
         "malygina": {
           "name": "Малыгина Наталия Алексеевна",
           "specialization": "Акушер-гинеколог",
-          "description": "Акушер-гинеколог, врач ультразвуковой диагностики."
+          "description": "Акушер-гинеколог, врач ультразвуковой диагностики.",
+          "photo": "photos/doctors/malygina.png"
         }
       }
     },
@@ -240,7 +278,8 @@
         "isakova-motina": {
           "name": "Исакова-Мотина Мария Андреевна",
           "specialization": "Фельдшер, косметик-эстетист, массажист",
-          "description": "Врач общей практики(педиатрия, гериатрия, взрослое население)"
+          "description": "Врач общей практики(педиатрия, гериатрия, взрослое население)",
+          "photo": "photos/doctors/isakova-motina.png"
         }
       }
     },
@@ -250,7 +289,8 @@
         "zhikhareva": {
           "name": "Жихарева Людмила Алексеевна",
           "specialization": "Терапевт",
-          "description": "Врач-терапевт, гирудотерапевт, гомеопат, пульмонология, физиатрия."
+          "description": "Врач-терапевт, гирудотерапевт, гомеопат, пульмонология, физиатрия.",
+          "photo": "photos/doctors/zhikhareva.png"
         }
       }
     },
@@ -260,7 +300,8 @@
         "strugova": {
           "name": "Стругова Екатерина Николаевна",
           "specialization": "Логопед для детей и взрослых",
-          "description": " "
+          "description": " ",
+          "photo": "photos/doctors/strugova.png"
         }
       }
     }
