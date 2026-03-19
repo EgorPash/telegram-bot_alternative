@@ -170,8 +170,7 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
-
-        keyboard = service_doctor_description_keyboard(doctor_key)
+        keyboard = service_doctor_description_keyboard(doctor_key)  # Используем обновлённую клавиатуру
 
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
@@ -190,7 +189,6 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
             )
     else:
         await query.edit_message_text("Данные о враче не найдены.")
-
 
 
 # Обработчик выбора "Процедуры" внутри "Услуг"
@@ -261,65 +259,82 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     back_to = query.data.replace('back_', '')
 
-    try:
-        if back_to == 'main_menu':
-            await query.delete_message()
-            text = data['start_message']
-            reply_keyboard = main_menu_keyboard()
-            await query.message.reply_text(text, reply_markup=reply_keyboard)
-
-        elif back_to == 'specialists':
-            text = data['specialists']['title']
-            keyboard = specialists_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to == 'services':
-            text = data['services']['title']
-            keyboard = services_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to == 'directions':
-            text = data['directions']['title']
-            keyboard = directions_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to == 'service_specializations':
-            text = "Выберите специализацию:"
-            keyboard = service_specializations_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to == 'service_procedures':
-            text = data['procedures']['title']
-            keyboard = service_procedures_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to.startswith('direction_'):
-            direction_key = back_to.replace('direction_', '')
-            if direction_key in data['directions']['directions_list']:
-                direction_data = data['directions']['directions_list'][direction_key]
-                text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
-                keyboard = direction_description_keyboard(direction_key)
-                await query.edit_message_text(
-                    text,
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
-                )
-            else:
-                text = data['directions']['title']
-                keyboard = directions_keyboard()
-                await query.edit_message_text(text, reply_markup=keyboard)
-        else:
-            await query.delete_message()
-            text = data['start_message']
-            reply_keyboard = main_menu_keyboard()
-            await query.message.reply_text(text, reply_markup=reply_keyboard)
-
-    except Exception as e:
-        logger.error(f"Ошибка при обработке кнопки Назад: {e}")
-        await query.delete_message()
+    if back_to == 'main_menu':
         text = data['start_message']
         reply_keyboard = main_menu_keyboard()
         await query.message.reply_text(text, reply_markup=reply_keyboard)
+        await query.delete_message()
+
+    elif back_to == 'specialists':
+        text = data['specialists']['title']
+        keyboard = specialists_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'services':
+        text = data['services']['title']
+        keyboard = services_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'directions':
+        text = data['directions']['title']
+        keyboard = directions_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'service_specializations':
+        text = "Выберите специализацию:"
+        keyboard = service_specializations_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'service_procedures':
+        text = data['procedures']['title']
+        keyboard = service_procedures_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    # Возврат к списку врачей специализации из карточки врача
+    elif back_to.startswith('service_specialization_'):
+        specialization_key = back_to.replace('service_specialization_', '')
+        specialization_data = data['specializations'][specialization_key]
+        text = f"Выберите врача ({specialization_data['title']}):"
+        keyboard = service_specialists_keyboard(specialization_key)
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    # Возврат из подробного описания врача к его карточке
+    elif back_to.startswith('service_doctor_'):
+        doctor_key = back_to.replace('service_doctor_', '')
+        doctor_data = None
+        for specialization in data['specializations'].values():
+            if doctor_key in specialization['doctors']:
+                doctor_data = specialization['doctors'][doctor_key]
+                break
+        if doctor_data:
+            photo_path = doctor_data.get('photo')
+            text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+            keyboard = service_doctor_detail_keyboard(doctor_key)
+            if photo_path and os.path.exists(photo_path):
+                with open(photo_path, 'rb') as photo:
+                    await query.message.reply_photo(
+                        photo=photo,
+                        caption=text,
+                        reply_markup=keyboard,
+                        parse_mode='Markdown'
+                    )
+                await query.message.delete()
+            else:
+                await query.edit_message_text(
+                    text + "\n\n📷 *Фотография не найдена*",
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+        else:
+            await query.edit_message_text("Данные о враче не найдены.")
+
+    # Возврат от подробного описания направления к краткому
+    elif back_to.startswith('direction_'):
+        direction_key = back_to.replace('direction_', '')
+        direction_data = data['directions']['directions_list'][direction_key]
+        text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
+        keyboard = direction_description_keyboard(direction_key)
+        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
 
 # Общий обработчик для всех кнопок "Записаться"
