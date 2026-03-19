@@ -228,11 +228,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.delete()
 
     elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'specialists_list':
+        # Возвращаемся к списку врачей (не к заголовку, а к клавиатуре)
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
@@ -259,7 +255,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Возврат к списку врачей специализации из карточки врача (в разделе "Услуги")
     elif back_to.startswith('service_specialization_'):
-        specialization_key = back_to.replace('back_service_specialization_', '')
+        specialization_key = back_to.replace('service_specialization_', '')
         if specialization_key in data['specializations']:
             specialization_data = data['specializations'][specialization_key]
             text = f"Выберите врача ({specialization_data['title']}):"
@@ -298,6 +294,12 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.edit_message_text("Данные о враче не найдены.")
 
+    # Возврат к списку врачей из главного меню (кнопка "Назад" с карточки врача)
+    elif back_to == 'specialists':
+        text = data['specialists']['title']
+        keyboard = specialists_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
     # Возврат от подробного описания направления к краткому
     elif back_to.startswith('direction_'):
         direction_key = back_to.replace('direction_', '')
@@ -305,6 +307,12 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
         keyboard = direction_description_keyboard(direction_key)
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
+
+    # Добавлено: обработка возврата к списку врачей из карточки врача в главном меню
+    elif back_to == 'specialists':
+        text = data['specialists']['title']
+        keyboard = specialists_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
 
 # Общий обработчик для всех кнопок "Записаться"
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
