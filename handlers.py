@@ -268,6 +268,14 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_specializations_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
+    elif back_to.startswith('back_service_specialization_'):
+        specialization_key = back_to.replace('back_service_specialization_', '')
+        if specialization_key in data['specializations']:
+            specialization_data = data['specializations'][specialization_key]
+            text = f"Выберите врача ({specialization_data['title']}):"
+            keyboard = service_specialists_keyboard(specialization_key)
+            await query.edit_message_text(text, reply_markup=keyboard)
+
     elif back_to == 'service_procedures':
         text = data['procedures']['title']
         keyboard = service_procedures_keyboard()
@@ -279,7 +287,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
         keyboard = direction_description_keyboard(direction_key)
-        await query.edit_message_text(text, reply_markup=keyboard)
+        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
 
 # Общий обработчик для всех кнопок "Записаться"
