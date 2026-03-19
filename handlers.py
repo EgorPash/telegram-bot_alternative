@@ -294,12 +294,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.edit_message_text("Данные о враче не найдены.")
 
-    # Возврат к списку врачей из главного меню (кнопка "Назад" с карточки врача)
-    elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
     # Возврат от подробного описания направления к краткому
     elif back_to.startswith('direction_'):
         direction_key = back_to.replace('direction_', '')
@@ -307,12 +301,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
         keyboard = direction_description_keyboard(direction_key)
         await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
-
-    # Добавлено: обработка возврата к списку врачей из карточки врача в главном меню
-    elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
 
 # Общий обработчик для всех кнопок "Записаться"
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
