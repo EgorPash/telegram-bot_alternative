@@ -113,7 +113,7 @@ def directions_keyboard():
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для направления (Подробнее, записаться и Назад)
+# Клавиатура для направления (Подробнее, Записаться и Назад)
 def direction_detail_keyboard(direction_key):
     keyboard = [
         [
@@ -143,17 +143,16 @@ def direction_detailed_description_keyboard(direction_key):
     return InlineKeyboardMarkup(keyboard)
 
 
-# Клавиатура для навигации по галерее
-def clinic_navigation_keyboard(current_index, total):
-    buttons = []
-    if current_index > 0:
-        buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data="clinic_prev"))
-    if current_index < total - 1:
-        buttons.append(InlineKeyboardButton("Вперёд ➡️", callback_data="clinic_next"))
+# Клавиатура для пролистывания фото клиники
+def clinic_photos_keyboard(current_index=0, total_photos=10):
+    keyboard = []
 
-    if len(buttons) == 0:
-        return None
-    elif len(buttons) == 1:
-        return InlineKeyboardMarkup([[buttons[0]]])
-    else:
-        return InlineKeyboardMarkup([buttons])
+    # Кнопки пролистывания
+    nav_buttons = []
+    if current_index > 0:
+        nav_buttons.append(InlineKeyboardButton("◀️ Назад", callback_data=f"prev_photo_{current_index}"))
+    if current_index < total_photos - 1:
+        nav_buttons.append(InlineKeyboardButton("Вперед ▶️", callback_data=f"next_photo_{current_index}"))
+
+    if nav_buttons:
+        keyboard.append(nav_buttons)

@@ -13,35 +13,50 @@ with open('data.json', 'r', encoding='utf-8') as f:
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = data['start_message']
-    clinic_paths = data['clinic_images']
-    contact_text = data['contact_numbers']
 
-    # Проверяем, что изображения существуют
-    valid_images = [path for path in clinic_paths if os.path.exists(path)]
-    if not valid_images:
-        await update.message.reply_text(welcome_text + "\n\n" + contact_text, reply_markup=main_menu_keyboard())
-        return
+    # Отправляем первое фото с клавиатурой
+    first_photo_path = data['clinic_photos'][0]
 
-    # Создаём медиа-группу (первые 10 изображений)
-    media_group = []
-    for i, path in enumerate(valid_images):
-        with open(path, 'rb') as photo:
-            if i == 0:
-                media_group.append(InputMediaPhoto(media=photo, caption=welcome_text))
-            else:
-                media_group.append(InputMediaPhoto(media=photo))
+    with open(first_photo_path, 'rb') as photo:
+        await update.message.reply_photo(
+            photo=photo,
+            caption=welcome_text,
+            reply_markup=clinic_photos_keyboard(0, len(data['clinic_photos'])),
+            parse_mode='Markdown'
+        )
 
-    # Отправляем медиа-группу
-    sent_message = await update.message.reply_media_group(media=media_group)
 
-    # Сохраняем индекс текущего изображения в контексте (для навигации)
-    context.user_data['clinic_index'] = 0
-    context.user_data['clinic_count'] = len(valid_images)
+# Обработчик пролистывания влево
+async def button_prev_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    current_index = int(query.data.replace('prev_photo_', ''))
+    new_index = current_index - 1
 
-    # Отправляем сообщение с контактами + кнопки навигации
-    keyboard = clinic_navigation_keyboard(0, len(valid_images))
-    await update.message.reply_text(contact_text, reply_markup=keyboard)
+    await show_clinic_photo(query, new_index)
 
+
+# Обработчик пролистывания вправо
+async def button_next_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    current_index = int(query.data.replace('next_photo_', ''))
+    new_index = current_index + 1
+    await show_clinic_photo(query, new_index)
+
+
+# Функция показа фото клиники
+async def show_clinic_photo(query, photo_index):
+    photos = data['clinic_photos']
+    total_photos = len(photos)
+
+    if 0 <= photo_index < total_photos:
+        photo_path = photos[photo_index]
+        with open(photo_path, 'rb') as photo:
+            await query.edit_message_media(
+                media=InputMediaPhoto(media=photo),
+                reply_markup=clinic_photos_keyboard(photo_index, total_photos)
+            )
 
 # Обработчик текстового сообщения "Специалисты" (из главного меню)
 async def specialists_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -315,26 +330,3 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     appointment_data = query.data.replace('appointment_', '')
     await query.message.reply_text("Функция записи будет реализована позже")
-
-# Обработчик навигации по галерее
-async def button_gallery_nav(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    direction = query.data.replace('clinic_', '')
-    current_index = context.user_data.get('clinic_index', 0)
-    total = context.user_data.get('clinic_count', 1)
-
-    if direction == 'prev' and current_index > 0:
-        context.user_data['clinic_index'] = current_index - 1
-        new_index = current_index - 1
-    elif direction == 'next' and current_index < total - 1:
-        context.user_data['clinic_index'] = current_index + 1
-        new_index = current_index + 1
-    else:
-        return
-
-    # Отправляем новое сообщение с контактами и обновлённой клавиатурой
-    contact_text = data['contact_numbers']
-    keyboard = gallery_navigation_keyboard(new_index, total)
-    await query.edit_message_text(contact_text, reply_markup=keyboard)
