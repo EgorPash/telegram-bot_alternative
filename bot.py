@@ -54,8 +54,6 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_service_procedures, pattern="^service_procedures$"))
     application.add_handler(CallbackQueryHandler(button_procedure, pattern="^procedure_"))
     application.add_handler(CallbackQueryHandler(button_direction, pattern="^direction_"))
-    application.add_handler(CallbackQueryHandler(button_prev_photo, pattern="^prev_photo_"))
-    application.add_handler(CallbackQueryHandler(button_next_photo, pattern="^next_photo_"))
     application.add_handler(CallbackQueryHandler(button_direction_detail, pattern="^detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_direction_more_detail, pattern="^more_detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))

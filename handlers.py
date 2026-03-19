@@ -1,9 +1,12 @@
 # Файл с обработчками команд и сообщений
+import logging
 import os
 from telegram import Update, InputMediaPhoto
 from telegram.ext import ContextTypes
 import json
 from keyboards import *
+
+logger = logging.getLogger(__name__)
 
 # Загружаем данные из JSON
 with open('data.json', 'r', encoding='utf-8') as f:
@@ -13,50 +16,26 @@ with open('data.json', 'r', encoding='utf-8') as f:
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = data['start_message']
+    clinic_images = data['clinic_images']
+    contact_numbers = data['contact_numbers']
 
-    # Отправляем первое фото с клавиатурой
-    first_photo_path = data['clinic_photos'][0]
+    # Отправляем приветственное сообщение
+    await update.message.reply_text(welcome_text)
 
-    with open(first_photo_path, 'rb') as photo:
-        await update.message.reply_photo(
-            photo=photo,
-            caption=welcome_text,
-            reply_markup=clinic_photos_keyboard(0, len(data['clinic_photos'])),
-            parse_mode='Markdown'
-        )
+    # Отправляем фотографии из clinic_images
+    for image_path in clinic_images:
+        if os.path.exists(image_path):
+            with open(image_path, 'rb') as photo:
+                await update.message.reply_photo(photo=photo)
+        else:
+            logger.warning(f"Фото не найдено: {image_path}")
 
+    # Отправляем контактные номера
+    await update.message.reply_text(contact_numbers)
 
-# Обработчик пролистывания влево
-async def button_prev_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    current_index = int(query.data.replace('prev_photo_', ''))
-    new_index = current_index - 1
-
-    await show_clinic_photo(query, new_index)
-
-
-# Обработчик пролистывания вправо
-async def button_next_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    current_index = int(query.data.replace('next_photo_', ''))
-    new_index = current_index + 1
-    await show_clinic_photo(query, new_index)
-
-
-# Функция показа фото клиники
-async def show_clinic_photo(query, photo_index):
-    photos = data['clinic_photos']
-    total_photos = len(photos)
-
-    if 0 <= photo_index < total_photos:
-        photo_path = photos[photo_index]
-        with open(photo_path, 'rb') as photo:
-            await query.edit_message_media(
-                media=InputMediaPhoto(media=photo),
-                reply_markup=clinic_photos_keyboard(photo_index, total_photos)
-            )
+    # Отправляем главное меню
+    keyboard = main_menu_keyboard()
+    await update.message.reply_text("Главное меню:", reply_markup=keyboard)
 
 # Обработчик текстового сообщения "Специалисты" (из главного меню)
 async def specialists_main(update: Update, context: ContextTypes.DEFAULT_TYPE):

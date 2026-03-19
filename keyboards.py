@@ -141,18 +141,3 @@ def direction_detailed_description_keyboard(direction_key):
         [InlineKeyboardButton("◀️ Назад", callback_data=f"back_direction_{direction_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
-
-
-# Клавиатура для пролистывания фото клиники
-def clinic_photos_keyboard(current_index=0, total_photos=10):
-    keyboard = []
-
-    # Кнопки пролистывания
-    nav_buttons = []
-    if current_index > 0:
-        nav_buttons.append(InlineKeyboardButton("◀️ Назад", callback_data=f"prev_photo_{current_index}"))
-    if current_index < total_photos - 1:
-        nav_buttons.append(InlineKeyboardButton("Вперед ▶️", callback_data=f"next_photo_{current_index}"))
-
-    if nav_buttons:
-        keyboard.append(nav_buttons)
