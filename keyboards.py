@@ -21,7 +21,7 @@ def specialists_keyboard():
         button = InlineKeyboardButton(f"{doctor['name']} - {doctor['specialization']}",
                                      callback_data=f"doctor_{key}")
         keyboard.append([button])
-    keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_specialists")])
+    keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
 # Клавиатура для врача (Записаться, Подробнее и Назад) - для главного меню
