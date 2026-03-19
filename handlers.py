@@ -100,7 +100,6 @@ async def button_specialization(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 # Обработчик выбора врача из услуг
-# Обработчик выбора врача из услуг
 async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
