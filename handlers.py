@@ -228,10 +228,21 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.delete()
 
     elif back_to == 'specialists':
-        # Возвращаемся к списку врачей (не к заголовку, а к клавиатуре)
+        # Возвращаемся к списку врачей
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to.startswith('specialization_'):
+        # Возврат к списку врачей специализации
+        specialization_key = back_to.replace('specialization_', '')
+        if specialization_key in data['specializations']:
+            specialization_data = data['specializations'][specialization_key]
+            text = f"Выберите врача ({specialization_data['title']}):"
+            keyboard = service_specialists_keyboard(specialization_key)
+            await query.edit_message_text(text, reply_markup=keyboard)
+        else:
+            await query.edit_message_text("Специализация не найдена.")
 
     elif back_to == 'services':
         text = data['services']['title']
@@ -253,7 +264,13 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_procedures_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
-    # Возврат к списку врачей специализации из карточки врача (в разделе "Услуги")
+    # Возврат из карточки врача в разделе "Специалисты"
+    elif back_to == 'doctor_list':
+        text = data['specialists']['title']
+        keyboard = specialists_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    # Возврат из карточки врача в разделе "Услуги" → "Специалисты" → специализация
     elif back_to.startswith('service_specialization_'):
         specialization_key = back_to.replace('service_specialization_', '')
         if specialization_key in data['specializations']:
@@ -264,43 +281,9 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await query.edit_message_text("Специализация не найдена.")
 
-    # Возврат из подробного описания врача к его карточке (в разделе "Услуги")
-    elif back_to.startswith('service_doctor_'):
-        doctor_key = back_to.replace('service_doctor_', '')
-        doctor_data = None
-        for specialization in data['specializations'].values():
-            if doctor_key in specialization['doctors']:
-                doctor_data = specialization['doctors'][doctor_key]
-                break
-        if doctor_data:
-            photo_path = doctor_data.get('photo')
-            text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-            keyboard = service_doctor_detail_keyboard(doctor_key)
-            if photo_path and os.path.exists(photo_path):
-                with open(photo_path, 'rb') as photo:
-                    await query.message.reply_photo(
-                        photo=photo,
-                        caption=text,
-                        reply_markup=keyboard,
-                        parse_mode='Markdown'
-                    )
-                await query.message.delete()
-            else:
-                await query.edit_message_text(
-                    text + "\n\n📷 *Фотография не найдена*",
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
-                )
-        else:
-            await query.edit_message_text("Данные о враче не найдены.")
+    else:
+        await query.edit_message_text("Неизвестная команда возврата.")
 
-    # Возврат от подробного описания направления к краткому
-    elif back_to.startswith('direction_'):
-        direction_key = back_to.replace('direction_', '')
-        direction_data = data['directions']['directions_list'][direction_key]
-        text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
-        keyboard = direction_description_keyboard(direction_key)
-        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
 # Общий обработчик для всех кнопок "Записаться"
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
