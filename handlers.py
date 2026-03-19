@@ -285,6 +285,31 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_specializations_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
+    elif back_to.startswith('back_service_doctors_'):
+        doctor_key = back_to.replace('back_service_doctors_', '')
+        # Ищем специализацию, к которой принадлежит врач
+        found_specialization = None
+        for specialization_key, specialization in data['specializations'].items():
+            if doctor_key in specialization['doctors']:
+                found_specialization = specialization_key
+                break
+
+        if found_specialization:
+            specialization_data = data['specializations'][found_specialization]
+            text = f"Выберите врача ({specialization_data['title']}):"
+            keyboard = service_specialists_keyboard(found_specialization)
+            try:
+                await query.edit_message_text(text, reply_markup=keyboard)
+            except Exception as e:
+                logger.warning(f"Ошибка при редактировании сообщения: {e}")
+                await query.message.reply_text(text, reply_markup=keyboard)
+                await query.delete_message()
+        else:
+            # Если не нашли специализацию, возвращаем к выбору специализаций
+            text = "Выберите специализацию:"
+            keyboard = service_specializations_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+
     elif back_to == 'service_procedures':
         text = data['procedures']['title']
         keyboard = service_procedures_keyboard()
