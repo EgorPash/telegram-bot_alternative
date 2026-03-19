@@ -18,7 +18,8 @@ def main_menu_keyboard():
 def specialists_keyboard():
     keyboard = []
     for key, doctor in data['specialists']['doctors'].items():
-        button = InlineKeyboardButton(f"{doctor['name']} - {doctor['specialization']}", callback_data=f"doctor_{key}")
+        button = InlineKeyboardButton(f"{doctor['name']} - {doctor['specialization']}",
+                                     callback_data=f"doctor_{key}")
         keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
@@ -27,8 +28,7 @@ def specialists_keyboard():
 def doctor_detail_keyboard(doctor_key):
     keyboard = [
         [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
-        [InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data="back_specialists")]  # ✅ Исправлено: back_specialists
+        [InlineKeyboardButton("◀️ Назад", callback_data="back_specialists")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -36,55 +36,67 @@ def doctor_detail_keyboard(doctor_key):
 def doctor_description_keyboard(doctor_key):
     keyboard = [
         [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data="back_specialists")]  # ✅ Исправлено: back_specialists
+        [InlineKeyboardButton("◀️ Назад", callback_data="back_specialists")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура специализаций в разделе "Услуги"
+# Клавиатура для меню "Услуги"
+def services_keyboard():
+    keyboard = []
+    for button_text in data['services']['buttons']:
+        callback_data = "service_specialists" if button_text == "Специалисты" else "service_procedures"
+        keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+    keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
+    return InlineKeyboardMarkup(keyboard)
+
+# Клавиатура со списком специализаций (из услуг)
 def service_specializations_keyboard():
     keyboard = []
-    for spec_key, spec_data in data['specializations'].items():
-        button = InlineKeyboardButton(spec_data['title'], callback_data=f"specialization_{spec_key}")
+    for key, specialization in data['specializations'].items():
+        button = InlineKeyboardButton(f"{specialization['title']}", callback_data=f"specialization_{key}")
         keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_services")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура списка врачей по специализации в разделе "Услуги"
+# Клавиатура со списком врачей специализации (из услуг)
 def service_specialists_keyboard(specialization_key):
     keyboard = []
-    for doctor_key, doctor in data['specializations'][specialization_key]['doctors'].items():
-        button = InlineKeyboardButton(f"{doctor['name']} - {doctor['specialization']}", callback_data=f"service_doctor_{doctor_key}")
+    specialization = data['specializations'][specialization_key]
+    for key, doctor in specialization['doctors'].items():
+        button = InlineKeyboardButton(f"{doctor['name']}", callback_data=f"service_doctor_{key}")
         keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_service_specializations")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для карточки врача в разделе "Услуги" (Записаться, Подробнее, Назад)
+# Клавиатура для врача из услуг (Записаться, Подробнее и Назад)
 def service_doctor_detail_keyboard(doctor_key):
     keyboard = [
-        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
-        [InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]  # ✅ ИСПРАВЛЕНО: без 's' — согласовано с handlers.py
+        [
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
+            InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
+        ],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctors_{doctor_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для описания врача в разделе "Услуги" (Записаться, Назад)
+# Клавиатура с описанием врача из услуг (Записаться и Назад)
 def service_doctor_description_keyboard(doctor_key):
     keyboard = [
-        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]  # ✅ ИСПРАВЛЕНО: без 's'
+        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}")],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура списка процедур в разделе "Услуги"
+# Клавиатура со списком процедур (из услуг)
 def service_procedures_keyboard():
     keyboard = []
-    for proc_key, proc_data in data['procedures']['procedures_list'].items():
-        button = InlineKeyboardButton(proc_data['name'], callback_data=f"procedure_{proc_key}")
+    for key, procedure in data['procedures']['procedures_list'].items():
+        button = InlineKeyboardButton(f"{procedure['name']}", callback_data=f"procedure_{key}")
         keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_services")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для деталей процедуры
+# Клавиатура для процедуры (Записаться и Назад)
 def procedure_detail_keyboard(procedure_key):
     keyboard = [
         [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_procedure_{procedure_key}")],
@@ -92,34 +104,40 @@ def procedure_detail_keyboard(procedure_key):
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура списка направлений
+# Клавиатура со списком направлений
 def directions_keyboard():
     keyboard = []
-    for dir_key, dir_data in data['directions']['directions_list'].items():
-        button = InlineKeyboardButton(dir_data['name'], callback_data=f"direction_{dir_key}")
+    for key, direction in data['directions']['directions_list'].items():
+        button = InlineKeyboardButton(f"{direction['name']}", callback_data=f"direction_{key}")
         keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для деталей направления
+# Клавиатура для направления (Подробнее, Записаться и Назад)
 def direction_detail_keyboard(direction_key):
     keyboard = [
-        [InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_direction_{direction_key}")],
+        [
+            InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_direction_{direction_key}"),
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")
+        ],
         [InlineKeyboardButton("◀️ Назад", callback_data="back_directions")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для описания направления
+# Клавиатура для описания направления (Записаться и Назад)
 def direction_description_keyboard(direction_key):
     keyboard = [
-        [InlineKeyboardButton("📖 Подробнее", callback_data=f"more_detail_direction_{direction_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"direction_{direction_key}")]
+        [
+            InlineKeyboardButton("📖 Подробнее", callback_data=f"more_detail_direction_{direction_key}"),
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")
+        ],
+        [InlineKeyboardButton("◀️ Назад", callback_data="back_directions")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура для подробного описания направления
 def direction_detailed_description_keyboard(direction_key):
     keyboard = [
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"detail_direction_{direction_key}")]
+        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_direction_{direction_key}")],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_direction_{direction_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)

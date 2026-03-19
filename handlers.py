@@ -228,6 +228,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.delete()
 
     elif back_to == 'specialists':
+        # Возвращаемся к списку врачей (не к заголовку, а к клавиатуре)
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
@@ -252,35 +253,16 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_procedures_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
-    # --- ИСПРАВЛЕНО: Возврат к списку врачей из главного меню "Специалисты" ---
-    elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    # --- НОВОЕ: Возврат к списку врачей из карточки врача в главном меню ---
-    elif back_to == 'back_specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    # --- НОВОЕ: Возврат к списку врачей специализации из карточки врача в "Услуги" ---
-    elif back_to.startswith('back_service_doctor_'):
-        doctor_key = back_to.replace('back_service_doctor_', '')
-        doctor_data = None
-        for specialization in data['specializations'].values():
-            if doctor_key in specialization['doctors']:
-                doctor_data = specialization['doctors'][doctor_key]
-                break
-        if doctor_data:
-            # Находим, к какой специализации относится врач
-            for spec_key, spec_data in data['specializations'].items():
-                if doctor_key in spec_data['doctors']:
-                    text = f"Выберите врача ({spec_data['title']}):"
-                    keyboard = service_specialists_keyboard(spec_key)
-                    await query.edit_message_text(text, reply_markup=keyboard)
-                    return
-        await query.edit_message_text("Данные о враче не найдены.")
+    # Возврат к списку врачей специализации из карточки врача (в разделе "Услуги")
+    elif back_to.startswith('service_specialization_'):
+        specialization_key = back_to.replace('service_specialization_', '')
+        if specialization_key in data['specializations']:
+            specialization_data = data['specializations'][specialization_key]
+            text = f"Выберите врача ({specialization_data['title']}):"
+            keyboard = service_specialists_keyboard(specialization_key)
+            await query.edit_message_text(text, reply_markup=keyboard)
+        else:
+            await query.edit_message_text("Специализация не найдена.")
 
     # Возврат из подробного описания врача к его карточке (в разделе "Услуги")
     elif back_to.startswith('service_doctor_'):
