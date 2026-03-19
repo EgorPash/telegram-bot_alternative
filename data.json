@@ -229,6 +229,14 @@
         }
       }
     },
+    "naturopat": {
+      "title": "Натуропаты",
+      "doctors": {
+        " ": {
+          "name": " "
+        }
+      }
+    },
     "hynekologist": {
       "title": "Гинекологи",
       "doctors": {
@@ -296,6 +304,28 @@
         }
       }
     },
+    "dermatolog": {
+      "title": "Натуропаты",
+      "doctors": {
+        " ": {
+          "name": " ",
+          "specialization": " ",
+          "description": " ",
+          "photo": " "
+        }
+      }
+    },
+    "ekg": {
+      "title": "ЭКГ",
+      "doctors": {
+        " ": {
+          "name": " ",
+          "specialization": " ",
+          "description": " ",
+          "photo": " "
+        }
+      }
+    },
     "hyrudo": {
       "title": "Гирудотерапевт",
       "doctors": {
@@ -304,6 +334,17 @@
           "specialization": "Терапевт",
           "description": "Врач-терапевт, гирудотерапевт, гомеопат, пульмонология, физиатрия.",
           "photo": "photos/doctors/zhihareva.png"
+        }
+      }
+    },
+    "aroma": {
+      "title": "Ароматерапевт",
+      "doctors": {
+        " ": {
+          "name": " ",
+          "specialization": " ",
+          "description": " ",
+          "photo": " "
         }
       }
     },
