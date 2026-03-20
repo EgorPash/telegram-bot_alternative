@@ -247,11 +247,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_specializations_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
-    elif back_to == 'service_specialization':
-        text = "Выберите специализацию:"
-        keyboard = service_specializations_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
     elif back_to == 'service_procedures':
         text = data['procedures']['title']
         keyboard = service_procedures_keyboard()
