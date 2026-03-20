@@ -227,13 +227,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(text, reply_markup=reply_keyboard)
         await query.message.delete()
 
-    elif back_to == 'back_specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
     elif back_to == 'specialists':
-        # Возвращаемся к списку врачей (не к заголовку, а к клавиатуре)
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
@@ -249,6 +243,11 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text, reply_markup=keyboard)
 
     elif back_to == 'service_specializations':
+        text = "Выберите специализацию:"
+        keyboard = service_specializations_keyboard()
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    elif back_to == 'service_specialization':
         text = "Выберите специализацию:"
         keyboard = service_specializations_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)

@@ -75,7 +75,7 @@ def service_doctor_detail_keyboard(doctor_key):
             InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
             InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
         ],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
