@@ -2,6 +2,7 @@
 import logging
 import os
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 import json
 from keyboards import *
@@ -108,6 +109,17 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('service_doctor_', '')
+
+    # Сохраняем текущую специализацию в контексте пользователя
+    current_specialization = None
+    for spec_key, specialization in data['specializations'].items():
+        if doctor_key in specialization['doctors']:
+            current_specialization = spec_key
+            break
+
+    if current_specialization:
+        context.user_data['current_specialization'] = current_specialization
+
     doctor_data = None
     for specialization in data['specializations'].values():
         if doctor_key in specialization['doctors']:
@@ -227,10 +239,17 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(text, reply_markup=reply_keyboard)
         await query.message.delete()
 
+
     elif back_to == 'specialists':
         text = data['specialists']['title']
         keyboard = specialists_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
+        # Удаляем текущее сообщение (карточка врача)
+        await query.message.delete()
+        # Отправляем новое сообщение со списком специалистов
+        await update.effective_chat.send_message(
+            text=text,
+            reply_markup=keyboard
+        )
 
     elif back_to == 'services':
         text = data['services']['title']
@@ -247,10 +266,29 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = service_specializations_keyboard()
         await query.edit_message_text(text, reply_markup=keyboard)
 
+
     elif back_to == 'service_specialization':
-        text = "Выберите специализацию:"
-        keyboard = service_specializations_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
+        current_specialization = context.user_data.get('current_specialization')
+
+        if not current_specialization:
+            text = "Выберите специализацию:"
+            keyboard = service_specializations_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
+            return
+
+        specialization_data = data['specializations'][current_specialization]
+        text = f"Выберите врача ({specialization_data['title']}):"
+        keyboard = service_specialists_keyboard(current_specialization)
+
+        if query.message:
+            try:
+                await query.message.delete()
+            except BadRequest:
+                logger.warning("Сообщение уже удалено")
+        await update.effective_chat.send_message(
+            text=text,
+            reply_markup=keyboard
+        )
 
     elif back_to == 'service_procedures':
         text = data['procedures']['title']
