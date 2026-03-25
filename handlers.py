@@ -372,27 +372,34 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 def get_service_or_doctor_name(appointment_type: str, appointment_id: str) -> str:
-    """Получает название услуги/врача по типу и ID"""
+    """Получает название услуги/врача по типу и ID с указанием источника"""
     try:
+        source = ""
         if appointment_type == 'doctor':
+            source = "Специалисты"
             # Сначала ищем в основных специалистах
             if appointment_id in data['specialists']['doctors']:
                 doctor_data = data['specialists']['doctors'][appointment_id]
-                return f"{doctor_data['name']} ({doctor_data['specialization']})"
+                return f"{source}: {doctor_data['name']} ({doctor_data['specialization']})"
             # Затем в специализациях
-            for specialization in data['specializations'].values():
+            for spec_key, specialization in data['specializations'].items():
                 if appointment_id in specialization['doctors']:
                     doctor_data = specialization['doctors'][appointment_id]
-                    return f"{doctor_data['name']} ({doctor_data['specialization']})"
+                    return f"{source}: {doctor_data['name']} ({doctor_data['specialization']})"
+
         elif appointment_type == 'procedure':
+            source = "Услуги"
             procedure_data = data['procedures']['procedures_list'][appointment_id]
-            return procedure_data['name']
+            return f"{source}: {procedure_data['name']}"
+
         elif appointment_type == 'direction':
+            source = "Направления"
             direction_data = data['directions']['directions_list'][appointment_id]
-            return direction_data['name']
+            return f"{source}: {direction_data['name']}"
+
     except Exception as e:
         logger.error(f"Ошибка получения названия услуги/врача: {e}")
-    return "Неизвестно"
+    return "Неизвестный источник: Неизвестная услуга"
 
 async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Отправляет пользователя в главное меню"""
@@ -405,10 +412,9 @@ async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(welcome_text, reply_markup=keyboard)
 
 async def send_admin_notification(context: ContextTypes.DEFAULT_TYPE, name: str, phone: str, day: str, service_or_doctor: str):
-    """Отправляет уведомление администратору"""
+    """Отправляет уведомление администратору с указанием источника заявки"""
     admin_chat_id = data['appointment']['admin_chat_id']
-
-    timestamp = datetime.now().strftime("%d.%m.%Y %H:%M")
+    timestamp = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
 
     notification_text = data['appointment']['notification_template'].format(
         name=name,
