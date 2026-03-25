@@ -16,6 +16,12 @@
   "main_menu": {
     "buttons": ["Специалисты", "Услуги", "Направления", "Наш сайт"]
   },
+  "appointment": {
+    "days": ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+    "admin_chat_id": "YOUR_ADMIN_CHAT_ID",
+    "confirmation_message": "Спасибо за заявку! Мы свяжемся с вами для уточнения деталей.",
+    "notification_template": "📋 **Новая заявка на запись**\n\n👤 *Имя:* {name}\n📱 *Телефон:* {phone}\n🗓 *День:* {day}\n🩺 *Услуга/Врач:* {service_or_doctor}\n\n⏰ *Время подачи:* {timestamp}"
+  },
   "specialists": {
     "title": "Наши специалисты:",
     "doctors": {

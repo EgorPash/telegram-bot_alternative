@@ -1,13 +1,19 @@
 # Файл с обработчиками команд и сообщений
+import datetime
 import logging
 import os
+
+from aiogram.types import update
 from telegram import Update
 from telegram.error import BadRequest
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 import json
 from keyboards import *
 
 logger = logging.getLogger(__name__)
+
+# Состояния
+NAME, PHONE, DAY = range(3)
 
 # Загружаем данные из JSON
 with open('data.json', 'r', encoding='utf-8') as f:
@@ -233,91 +239,229 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     back_to = query.data.replace('back_', '')
 
-    if back_to == 'main_menu':
-        text = data['start_message']
-        reply_keyboard = main_menu_keyboard()
-        await query.message.reply_text(text, reply_markup=reply_keyboard)
-        await query.message.delete()
+    try:
+        if back_to == 'main_menu':
+            text = data['start_message']
+            reply_keyboard = main_menu_keyboard()
+            await query.message.reply_text(text, reply_markup=reply_keyboard)
+            await query.message.delete()
 
+        elif back_to == 'specialists':
+            text = data['specialists']['title']
+            keyboard = specialists_keyboard()
+            await query.message.delete()
+            await update.effective_chat.send_message(
+                text=text,
+                reply_markup=keyboard
+            )
 
-    elif back_to == 'specialists':
-        text = data['specialists']['title']
-        keyboard = specialists_keyboard()
-        # Удаляем текущее сообщение (карточка врача)
-        await query.message.delete()
-        # Отправляем новое сообщение со списком специалистов
-        await update.effective_chat.send_message(
-            text=text,
-            reply_markup=keyboard
-        )
+        elif back_to == 'services':
+            text = data['services']['title']
+            keyboard = services_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
 
-    elif back_to == 'services':
-        text = data['services']['title']
-        keyboard = services_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
+        elif back_to == 'directions':
+            text = data['directions']['title']
+            keyboard = directions_keyboard()
+            await query.edit_message_text(text, reply_markup=keyboard)
 
-    elif back_to == 'directions':
-        text = data['directions']['title']
-        keyboard = directions_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    elif back_to == 'service_specializations':
-        text = "Выберите специализацию:"
-        keyboard = service_specializations_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-
-    elif back_to == 'service_specialization':
-        current_specialization = context.user_data.get('current_specialization')
-
-        if not current_specialization:
+        elif back_to == 'service_specializations':
             text = "Выберите специализацию:"
             keyboard = service_specializations_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
-            return
 
-        specialization_data = data['specializations'][current_specialization]
-        text = f"Выберите врача ({specialization_data['title']}):"
-        keyboard = service_specialists_keyboard(current_specialization)
-
-        if query.message:
-            try:
-                await query.message.delete()
-            except BadRequest:
-                logger.warning("Сообщение уже удалено")
-        await update.effective_chat.send_message(
-            text=text,
-            reply_markup=keyboard
-        )
-
-    elif back_to == 'service_procedures':
-        text = data['procedures']['title']
-        keyboard = service_procedures_keyboard()
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    # Возврат к списку врачей специализации из карточки врача (в разделе "Услуги")
-    elif back_to.startswith('service_specialization_'):
-        specialization_key = back_to.replace('service_specialization_', '')
-        if specialization_key in data['specializations']:
-            specialization_data = data['specializations'][specialization_key]
-            text = f"Выберите врача ({specialization_data['title']}):"
-            keyboard = service_specialists_keyboard(specialization_key)
+        elif back_to == 'service_procedures':
+            text = data['procedures']['title']
+            keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
-        else:
-            await query.edit_message_text("Специализация не найдена.")
 
-    # Возврат из подробного описания врача к его карточке (в разделе "Услуги")
-    elif back_to.startswith('service_doctor_'):
-        doctor_key = back_to.replace('service_doctor_', '')
-        doctor_data = None
-        for specialization in data['specializations'].values():
-            if doctor_key in specialization['doctors']:
-                doctor_data = specialization['doctors'][doctor_key]
-                break
-        if doctor_data:
-            photo_path = doctor_data.get('photo')
-            text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-            keyboard = service_doctor_detail_keyboard(doctor_key)
+        elif back_to.startswith('service_specialization_'):
+            specialization_key = back_to.replace('service_specialization_', '')
+            if specialization_key in data['specializations']:
+                specialization_data = data['specializations'][specialization_key]
+                text = f"Выберите врача ({specialization_data['title']}):"
+                keyboard = service_specialists_keyboard(specialization_key)
+                await query.edit_message_text(text, reply_markup=keyboard)
+            else:
+                await handle_invalid_state(query, "Специализация не найдена")
+
+        elif back_to == 'appointment':
+            # Возврат из процесса записи
+            await handle_back_from_appointment(query, context)
+
+        else:
+            await handle_invalid_state(query, f"Неизвестный пункт возврата: {back_to}")
+
+    except Exception as e:
+        logger.error(f"Ошибка в обработчике возврата: {e}")
+        await handle_invalid_state(query, "Произошла ошибка при возврате")
+
+# Обработчик для всех кнопок "Записаться"
+async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    appointment_data = query.data.replace('appointment_', '')
+
+    # Исправленное извлечение типа и ID
+    parts = appointment_data.split('_')
+    if len(parts) >= 2:
+        appointment_type = parts[0]
+        appointment_id = '_'.join(parts[1:])
+    else:
+        await query.edit_message_text("Ошибка: неверный формат данных записи")
+        return
+
+    # Сохраняем данные для возврата
+    context.user_data['appointment_type'] = appointment_type
+    context.user_data['appointment_id'] = appointment_id
+
+    text = "Выберите удобный день для записи:"
+    keyboard = appointment_days_keyboard()
+
+    await query.edit_message_text(text, reply_markup=keyboard)
+    return DAY
+
+async def select_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    selected_day = query.data.replace('day_', '')
+    context.user_data['selected_day'] = selected_day
+
+    await query.edit_message_text("Отлично! Теперь введите ваше имя:")
+    return NAME
+
+async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    name = update.message.text
+    context.user_data['name'] = name
+
+    await update.message.reply_text("Спасибо! Теперь введите ваш номер телефона:")
+    return PHONE
+
+async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    phone = update.message.text
+    context.user_data['phone'] = phone
+
+    # Получаем данные для уведомления
+    appointment_type = context.user_data['appointment_type']
+    appointment_id = context.user_data['appointment_id']
+    selected_day = context.user_data['selected_day']
+    name = context.user_data['name']
+
+    # Формируем описание услуги/врача
+    service_or_doctor = get_service_or_doctor_name(appointment_type, appointment_id)
+
+    # Отправляем подтверждение пользователю
+    confirmation_message = data['appointment']['confirmation_message']
+    await update.message.reply_text(confirmation_message)
+
+    # Уведомляем администратора
+    await send_admin_notification(
+        context,
+        name,
+        phone,
+        selected_day,
+        service_or_doctor
+    )
+
+    # Очищаем данные пользователя
+    context.user_data.clear()
+
+    # Возвращаем в главное меню
+    await main_menu_handler(update, context)
+    return ConversationHandler.END
+
+def get_service_or_doctor_name(appointment_type: str, appointment_id: str) -> str:
+    """Получает название услуги/врача по типу и ID"""
+    try:
+        if appointment_type == 'doctor':
+            # Сначала ищем в основных специалистах
+            if appointment_id in data['specialists']['doctors']:
+                doctor_data = data['specialists']['doctors'][appointment_id]
+                return f"{doctor_data['name']} ({doctor_data['specialization']})"
+            # Затем в специализациях
+            for specialization in data['specializations'].values():
+                if appointment_id in specialization['doctors']:
+                    doctor_data = specialization['doctors'][appointment_id]
+                    return f"{doctor_data['name']} ({doctor_data['specialization']})"
+        elif appointment_type == 'procedure':
+            procedure_data = data['procedures']['procedures_list'][appointment_id]
+            return procedure_data['name']
+        elif appointment_type == 'direction':
+            direction_data = data['directions']['directions_list'][appointment_id]
+            return direction_data['name']
+    except Exception as e:
+        logger.error(f"Ошибка получения названия услуги/врача: {e}")
+    return "Неизвестно"
+
+async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Отправляет пользователя в главное меню"""
+    welcome_text = data['start_message']
+    keyboard = main_menu_keyboard()
+    if update.message:
+        await update.message.reply_text(welcome_text, reply_markup=keyboard)
+    else:
+        query = update.callback_query
+        await query.edit_message_text(welcome_text, reply_markup=keyboard)
+
+async def send_admin_notification(context: ContextTypes.DEFAULT_TYPE, name: str, phone: str, day: str, service_or_doctor: str):
+    """Отправляет уведомление администратору"""
+    admin_chat_id = data['appointment']['admin_chat_id']
+
+    timestamp = datetime.now().strftime("%d.%m.%Y %H:%M")
+
+    notification_text = data['appointment']['notification_template'].format(
+        name=name,
+        phone=phone,
+        day=day,
+        service_or_doctor=service_or_doctor,
+        timestamp=timestamp
+    )
+
+    try:
+        await context.bot.send_message(
+            chat_id=admin_chat_id,
+            text=notification_text,
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        logger.error(f"Ошибка отправки уведомления администратору: {e}")
+
+async def handle_back_from_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обрабатывает возврат из процесса записи на приём"""
+    query = update.callback_query
+    await query.answer()
+
+    appointment_type = context.user_data.get('appointment_type')
+    appointment_id = context.user_data.get('appointment_id')
+
+    if not appointment_type or not appointment_id:
+        await query.edit_message_text("Данные о записи не найдены. Возврат в главное меню.")
+        await main_menu_handler(update, context)
+        return
+
+    try:
+        if appointment_type == 'doctor':
+            # Проверяем сначала в специалистах
+            if appointment_id in data['specialists']['doctors']:
+                doctor_data = data['specialists']['doctors'][appointment_id]
+                photo_path = doctor_data.get('photo')
+                text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+                keyboard = doctor_detail_keyboard(appointment_id)
+            else:
+                # Затем в специализациях
+                doctor_data = None
+                for specialization in data['specializations'].values():
+                    if appointment_id in specialization['doctors']:
+                        doctor_data = specialization['doctors'][appointment_id]
+                        break
+                if not doctor_data:
+                    raise ValueError("Врач не найден")
+
+                photo_path = doctor_data.get('photo')
+                text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+                keyboard = service_doctor_detail_keyboard(appointment_id)
+
             if photo_path and os.path.exists(photo_path):
                 with open(photo_path, 'rb') as photo:
                     await query.message.reply_photo(
@@ -333,20 +477,63 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     reply_markup=keyboard,
                     parse_mode='Markdown'
                 )
+
+        elif appointment_type == 'procedure':
+            procedure_data = data['procedures']['procedures_list'].get(appointment_id)
+            if not procedure_data:
+                raise ValueError("Процедура не найдена")
+
+            text = f"Процедура: {procedure_data['name']}"
+            keyboard = procedure_detail_keyboard(appointment_id)
+            await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif appointment_type == 'direction':
+            direction_data = data['directions']['directions_list'].get(appointment_id)
+            if not direction_data:
+                raise ValueError("Направление не найдено")
+
+            text = f"Направление: {direction_data['name']}"
+            keyboard = direction_detail_keyboard(appointment_id)
+            await query.edit_message_text(text, reply_markup=keyboard)
+
         else:
-            await query.edit_message_text("Данные о враче не найдены.")
+            await query.edit_message_text("Неизвестный тип записи. Возврат в главное меню.")
+            await main_menu_handler(update, context)
 
-    # Возврат от подробного описания направления к краткому
-    elif back_to.startswith('direction_'):
-        direction_key = back_to.replace('direction_', '')
-        direction_data = data['directions']['directions_list'][direction_key]
-        text = f"*{direction_data['name']}*\n\n{direction_data['description']}"
-        keyboard = direction_description_keyboard(direction_key)
-        await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
+    except Exception as e:
+        logger.error(f"Ошибка при возврате из записи: {e}")
+        await query.edit_message_text(f"Ошибка: {str(e)}. Возврат в главное меню.")
+        await main_menu_handler(update, context)
 
-# Общий обработчик для всех кнопок "Записаться"
-async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    appointment_data = query.data.replace('appointment_', '')
-    await query.message.reply_text("Функция записи будет реализована позже")
+
+async def handle_invalid_state(query: Update.callback_query, error_message: str):
+    """Обрабатывает некорректные состояния и ошибки"""
+    logger.warning(f"Некорректное состояние возврата: {error_message}")
+    try:
+        await query.edit_message_text(
+            f"⚠️ {error_message}\n\nВозврат в главное меню...",
+            reply_markup=main_menu_keyboard()
+        )
+    except BadRequest:
+        # Если сообщение уже удалено, отправляем новое
+        await query.message.reply_text(
+            f"⚠️ {error_message}\n\nВозврат в главное меню...",
+            reply_markup=main_menu_keyboard()
+        )
+
+async def cancel_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Отменяет процесс записи"""
+    if update.message:
+        await update.message.reply_text(
+            "Запись отменена. Выберите другой раздел:",
+            reply_markup=main_menu_keyboard()
+        )
+    elif update.callback_query:
+        await update.callback_query.answer("Запись отменена")
+        await update.callback_query.edit_message_text(
+            "Запись отменена. Выберите другой раздел:",
+            reply_markup=main_menu_keyboard()
+        )
+
+    context.user_data.clear()
+    return ConversationHandler.END
