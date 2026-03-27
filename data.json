@@ -1,16 +1,16 @@
 {
   "start_message": "Приветствуем вас в клинике \"Альтернатива\".\nМы заботимся о вашем здоровье и всегда рады помочь вам почувствовать себя лучше.\nЧем мы можем помочь?",
   "clinic_images": [
-    "photos/clinic/1.jpg",
-    "photos/clinic/2.jpg",
-    "photos/clinic/3.jpg",
-    "photos/clinic/4.jpg",
-    "photos/clinic/5.jpg",
-    "photos/clinic/6.jpg",
-    "photos/clinic/7.jpg",
-    "photos/clinic/8.jpg",
-    "photos/clinic/9.jpg",
-    "photos/clinic/10.jpg"
+    "photos/clinic/1.png",
+    "photos/clinic/2.png",
+    "photos/clinic/3.png",
+    "photos/clinic/4.png",
+    "photos/clinic/5.png",
+    "photos/clinic/6.png",
+    "photos/clinic/7.png",
+    "photos/clinic/8.png",
+    "photos/clinic/9.png",
+    "photos/clinic/10.png"
   ],
   "contact_numbers": "Также можно связаться с нами по номерам\n+7(342) 214 20 40\n+7(902) 793 53 59",
   "main_menu": {

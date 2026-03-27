@@ -32,13 +32,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for image_path in clinic_images:
         if os.path.exists(image_path):
             with open(image_path, 'rb') as photo:
-                # Автоматическое определение типа файла
-                if image_path.lower().endswith('.jpg') or image_path.lower().endswith('.jpeg'):
-                    await update.message.reply_photo(photo=photo)
-                elif image_path.lower().endswith('.png'):
-                    await update.message.reply_photo(photo=photo)
-                else:
-                    logger.warning(f"Неподдерживаемый формат файла: {image_path}")
+                await update.message.reply_photo(photo=photo)
         else:
             logger.warning(f"Фото не найдено: {image_path}")
 
