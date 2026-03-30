@@ -154,11 +154,9 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
 async def button_service_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    doctor_key = query.data.replace('service_doctor_', '')
+    doctor_key = query.data.replace('detail_service_doctor_', '')
 
-    # Получаем текущую специализацию из контекста
     current_specialization = context.user_data.get('current_specialization')
-
     if not current_specialization:
         await query.edit_message_text("Ошибка: не определена специализация. Пожалуйста, начните сначала.")
         return
@@ -170,8 +168,8 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
 
     if doctor_data:
         photo_path = doctor_data.get('photo')
-        text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-        keyboard = service_doctor_detail_keyboard(doctor_key)
+        text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
+        keyboard = service_doctor_description_keyboard(doctor_key)
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
