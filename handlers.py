@@ -2,6 +2,7 @@
 import datetime
 import logging
 import os
+
 from aiogram.types import update
 from telegram import Update
 from telegram.error import BadRequest
@@ -104,7 +105,6 @@ async def button_specialization(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query
     await query.answer()
     specialization_key = query.data.replace('specialization_', '')
-    context.user_data['current_specialization'] = specialization_key  # Сохраняем контекст
     specialization_data = data['specializations'][specialization_key]
     text = f"Выберите врача ({specialization_data['title']}):"
     keyboard = service_specialists_keyboard(specialization_key)
@@ -116,18 +116,21 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
     doctor_key = query.data.replace('service_doctor_', '')
 
-    # Получаем текущую специализацию из контекста
-    current_specialization = context.user_data.get('current_specialization')
+    # Сохраняем текущую специализацию в контексте пользователя
+    current_specialization = None
+    for spec_key, specialization in data['specializations'].items():
+        if doctor_key in specialization['doctors']:
+            current_specialization = spec_key
+            break
 
-    if not current_specialization:
-        await query.edit_message_text("Ошибка: не определена специализация. Пожалуйста, начните сначала.")
-        return
+    if current_specialization:
+        context.user_data['current_specialization'] = current_specialization
 
     doctor_data = None
-    specialization = data['specializations'].get(current_specialization)
-    if specialization and doctor_key in specialization['doctors']:
-        doctor_data = specialization['doctors'][doctor_key]
-
+    for specialization in data['specializations'].values():
+        if doctor_key in specialization['doctors']:
+            doctor_data = specialization['doctors'][doctor_key]
+            break
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
@@ -155,17 +158,11 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('detail_service_doctor_', '')
-
-    current_specialization = context.user_data.get('current_specialization')
-    if not current_specialization:
-        await query.edit_message_text("Ошибка: не определена специализация. Пожалуйста, начните сначала.")
-        return
-
     doctor_data = None
-    specialization = data['specializations'].get(current_specialization)
-    if specialization and doctor_key in specialization['doctors']:
-        doctor_data = specialization['doctors'][doctor_key]
-
+    for specialization in data['specializations'].values():
+        if doctor_key in specialization['doctors']:
+            doctor_data = specialization['doctors'][doctor_key]
+            break
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
@@ -258,11 +255,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif back_to == 'services':
             text = data['services']['title']
             keyboard = services_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_to == 'service_specialists':
-            text = "Выберите специализацию:"
-            keyboard = service_specializations_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
         elif back_to == 'directions':
