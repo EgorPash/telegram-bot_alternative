@@ -77,31 +77,13 @@ def service_specialists_keyboard(specialization_key):
 
 # Клавиатура для врача из услуг (Записаться, Подробнее и Назад)
 def service_doctor_detail_keyboard(doctor_key):
-    # Находим специализацию врача
-    specialization_key = None
-    for spec_key, specialization in data['specializations'].items():
-        if doctor_key in specialization['doctors']:
-            specialization_key = spec_key
-            break
-
-    if specialization_key:
-        keyboard = [
-            [
-                InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
-                InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
-            ],
-            [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization_{specialization_key}")]
-        ]
-    else:
-        # Если специализация не найдена, возвращаемся к списку специализаций
-        keyboard = [
-            [
-                InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
-                InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
-            ],
-            [InlineKeyboardButton("◀️ Назад", callback_data="back_service_specializations")]
-        ]
-
+    keyboard = [
+        [
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
+            InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
+        ],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization")]
+    ]
     return InlineKeyboardMarkup(keyboard)
 
 # Клавиатура с описанием врача из услуг (Записаться и Назад)
