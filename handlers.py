@@ -272,7 +272,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
-
         elif back_to.startswith('service_specialization_'):
             specialization_key = back_to.replace('service_specialization_', '')
             if specialization_key in data['specializations']:
@@ -299,7 +298,6 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     appointment_data = query.data
 
-    # Разделяем callback_data корректно
     parts = appointment_data.split('_')
     if len(parts) < 2 or parts[0] != 'appointment':
         await query.edit_message_text("Ошибка: неверный формат данных записи")
@@ -313,13 +311,12 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data['appointment_id'] = appointment_id
 
     # Для врачей из специализаций сохраняем контекст
-    if appointment_type == 'doctor':
+    if appointment_type in ['doctor', 'service_doctor']:
         context.user_data['is_from_specialization'] = True
-    elif appointment_type == 'service_doctor':
-        context.user_data['is_from_specialization'] = True
-        # Нормализуем тип, сохраняя фактическое происхождение
-        context.user_data['appointment_source'] = 'service_doctor'
-        appointment_type = 'doctor'
+        # Нормализуем тип
+        if appointment_type == 'service_doctor':
+            context.user_data['appointment_source'] = 'service_doctor'
+            appointment_type = 'doctor'
     else:
         context.user_data['is_from_specialization'] = False
 

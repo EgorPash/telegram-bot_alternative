@@ -93,7 +93,6 @@ def service_doctor_detail_keyboard(doctor_key):
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Клавиатура с описанием врача из услуг (Записаться и Назад)
 def service_doctor_description_keyboard(doctor_key):
     # Находим специализацию врача
     specialization_key = None
