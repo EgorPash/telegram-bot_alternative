@@ -2,7 +2,6 @@
 import datetime
 import logging
 import os
-
 from aiogram.types import update
 from telegram import Update
 from telegram.error import BadRequest
@@ -152,7 +151,7 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text("Данные о враче не найдены.")
 
 # Обработчик кнопки "Подробнее" о враче из услуг
-async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_service_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('service_doctor_', '')
