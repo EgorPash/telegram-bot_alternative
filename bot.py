@@ -2,6 +2,7 @@
 import os
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from dotenv import load_dotenv
+from telegram.error import BadRequest
 from handlers import *
 import logging
 
@@ -57,31 +58,6 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_direction_more_detail, pattern="^more_detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))
     application.add_handler(CallbackQueryHandler(button_back, pattern="^back_"))
-
-    appointment_conv_handler = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(button_appointment, pattern="^appointment_")
-        ],
-        states={
-            DAY: [
-                CallbackQueryHandler(select_day, pattern="^day_"),
-                CallbackQueryHandler(handle_back_from_appointment, pattern="^back_appointment")
-            ],
-            NAME: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, get_name),
-                CallbackQueryHandler(handle_back_from_appointment, pattern="^back_appointment")
-            ],
-            PHONE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone),
-                CallbackQueryHandler(handle_back_from_appointment, pattern="^back_appointment")
-            ],
-        },
-        fallbacks=[
-            CommandHandler("cancel", cancel_appointment),
-            MessageHandler(filters.ALL, cancel_appointment)
-        ]
-    )
-    application.add_handler(appointment_conv_handler)
 
     # Запускаем бота (бесконечный опрос серверов Telegram)
     print("Бот запущен...")

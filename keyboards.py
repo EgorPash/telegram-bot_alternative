@@ -24,13 +24,6 @@ def specialists_keyboard():
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
-def appointment_days_keyboard():
-    keyboard = []
-    for day in data['appointment']['days']:
-        keyboard.append([InlineKeyboardButton(day, callback_data=f"day_{day}")])
-    keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_appointment")])
-    return InlineKeyboardMarkup(keyboard)
-
 # Клавиатура для врача (Записаться и Назад) - для главного меню
 def doctor_detail_keyboard(doctor_key):
     keyboard = [
