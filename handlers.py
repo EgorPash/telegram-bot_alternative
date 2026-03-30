@@ -243,17 +243,14 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if back_to == 'main_menu':
             text = data['start_message']
             reply_keyboard = main_menu_keyboard()
-            await query.message.reply_text(text, reply_markup=reply_keyboard)
             await query.message.delete()
+            await query.message.reply_text(text, reply_markup=reply_keyboard)
 
         elif back_to == 'specialists':
             text = data['specialists']['title']
             keyboard = specialists_keyboard()
             await query.message.delete()
-            await update.effective_chat.send_message(
-                text=text,
-                reply_markup=keyboard
-            )
+            await query.message.reply_text(text, reply_markup=keyboard)
 
         elif back_to == 'services':
             text = data['services']['title']
@@ -286,8 +283,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await handle_invalid_state(query, "Специализация не найдена")
 
         elif back_to == 'appointment':
-            # Возврат из процесса записи
-            await handle_back_from_appointment(query, context)
+            await handle_back_from_appointment(update, context)
 
         else:
             await handle_invalid_state(query, f"Неизвестный пункт возврата: {back_to}")
@@ -300,20 +296,29 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    appointment_data = query.data.replace('appointment_', '')
+    appointment_data = query.data
 
-    # Исправленное извлечение типа и ID
+    # Разделяем callback_data корректно
     parts = appointment_data.split('_')
-    if len(parts) >= 2:
-        appointment_type = parts[0]
-        appointment_id = '_'.join(parts[1:])
-    else:
+    if len(parts) < 2 or parts[0] != 'appointment':
         await query.edit_message_text("Ошибка: неверный формат данных записи")
         return
+
+    appointment_type = parts[1]
+    appointment_id = '_'.join(parts[2:])
 
     # Сохраняем данные для возврата
     context.user_data['appointment_type'] = appointment_type
     context.user_data['appointment_id'] = appointment_id
+
+    # Для врачей из специализаций сохраняем контекст
+    if appointment_type == 'doctor':
+        context.user_data['is_from_specialization'] = True
+    elif appointment_type == 'service_doctor':
+        context.user_data['is_from_specialization'] = True
+        appointment_type = 'doctor'  # Нормализуем тип
+    else:
+        context.user_data['is_from_specialization'] = False
 
     text = "Выберите удобный день для записи:"
     keyboard = appointment_days_keyboard()
@@ -342,27 +347,13 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = update.message.text
     context.user_data['phone'] = phone
 
-    # Получаем данные для уведомления
-    appointment_type = context.user_data['appointment_type']
-    appointment_id = context.user_data['appointment_id']
+    # Получаем данные для подтверждения
     selected_day = context.user_data['selected_day']
     name = context.user_data['name']
 
-    # Формируем описание услуги/врача
-    service_or_doctor = get_service_or_doctor_name(appointment_type, appointment_id)
-
-    # Отправляем подтверждение пользователю
+    # Формируем подтверждение пользователю
     confirmation_message = data['appointment']['confirmation_message']
     await update.message.reply_text(confirmation_message)
-
-    # Уведомляем администратора
-    await send_admin_notification(
-        context,
-        name,
-        phone,
-        selected_day,
-        service_or_doctor
-    )
 
     # Очищаем данные пользователя
     context.user_data.clear()
@@ -372,34 +363,32 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 def get_service_or_doctor_name(appointment_type: str, appointment_id: str) -> str:
-    """Получает название услуги/врача по типу и ID с указанием источника"""
+    """Получает название услуги/врача по типу и ID"""
     try:
-        source = ""
         if appointment_type == 'doctor':
-            source = "Специалисты"
             # Сначала ищем в основных специалистах
             if appointment_id in data['specialists']['doctors']:
                 doctor_data = data['specialists']['doctors'][appointment_id]
-                return f"{source}: {doctor_data['name']} ({doctor_data['specialization']})"
+                return f"{doctor_data['name']} ({doctor_data['specialization']})"
             # Затем в специализациях
             for spec_key, specialization in data['specializations'].items():
                 if appointment_id in specialization['doctors']:
                     doctor_data = specialization['doctors'][appointment_id]
-                    return f"{source}: {doctor_data['name']} ({doctor_data['specialization']})"
+                    return f"{doctor_data['name']} ({doctor_data['specialization']})"
 
         elif appointment_type == 'procedure':
-            source = "Услуги"
-            procedure_data = data['procedures']['procedures_list'][appointment_id]
-            return f"{source}: {procedure_data['name']}"
+            procedure_data = data['procedures']['procedures_list'].get(appointment_id)
+            if procedure_data:
+                return procedure_data['name']
 
         elif appointment_type == 'direction':
-            source = "Направления"
-            direction_data = data['directions']['directions_list'][appointment_id]
-            return f"{source}: {direction_data['name']}"
+            direction_data = data['directions']['directions_list'].get(appointment_id)
+            if direction_data:
+                return direction_data['name']
 
     except Exception as e:
         logger.error(f"Ошибка получения названия услуги/врача: {e}")
-    return "Неизвестный источник: Неизвестная услуга"
+    return "Неизвестная услуга"
 
 async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Отправляет пользователя в главное меню"""
@@ -410,28 +399,6 @@ async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         query = update.callback_query
         await query.edit_message_text(welcome_text, reply_markup=keyboard)
-
-async def send_admin_notification(context: ContextTypes.DEFAULT_TYPE, name: str, phone: str, day: str, service_or_doctor: str):
-    """Отправляет уведомление администратору с указанием источника заявки"""
-    admin_chat_id = data['appointment']['admin_chat_id']
-    timestamp = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
-
-    notification_text = data['appointment']['notification_template'].format(
-        name=name,
-        phone=phone,
-        day=day,
-        service_or_doctor=service_or_doctor,
-        timestamp=timestamp
-    )
-
-    try:
-        await context.bot.send_message(
-            chat_id=admin_chat_id,
-            text=notification_text,
-            parse_mode='Markdown'
-        )
-    except Exception as e:
-        logger.error(f"Ошибка отправки уведомления администратору: {e}")
 
 async def handle_back_from_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обрабатывает возврат из процесса записи на приём"""
@@ -448,25 +415,34 @@ async def handle_back_from_appointment(update: Update, context: ContextTypes.DEF
 
     try:
         if appointment_type == 'doctor':
-            # Проверяем сначала в специалистах
+            is_from_specialization = context.user_data.get('is_from_specialization', False)
+
+            # Ищем врача в зависимости от источника
             if appointment_id in data['specialists']['doctors']:
                 doctor_data = data['specialists']['doctors'][appointment_id]
                 photo_path = doctor_data.get('photo')
                 text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
                 keyboard = doctor_detail_keyboard(appointment_id)
-            else:
-                # Затем в специализациях
+            elif is_from_specialization:
+                # Ищем в специализациях
                 doctor_data = None
                 for specialization in data['specializations'].values():
                     if appointment_id in specialization['doctors']:
                         doctor_data = specialization['doctors'][appointment_id]
                         break
+
                 if not doctor_data:
-                    raise ValueError("Врач не найден")
+                    await query.edit_message_text("Врач не найден. Возврат в главное меню.")
+                    await main_menu_handler(update, context)
+                    return
 
                 photo_path = doctor_data.get('photo')
                 text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
                 keyboard = service_doctor_detail_keyboard(appointment_id)
+            else:
+                await query.edit_message_text("Врач не найден. Возврат в главное меню.")
+                await main_menu_handler(update, context)
+                return
 
             if photo_path and os.path.exists(photo_path):
                 with open(photo_path, 'rb') as photo:
@@ -487,7 +463,9 @@ async def handle_back_from_appointment(update: Update, context: ContextTypes.DEF
         elif appointment_type == 'procedure':
             procedure_data = data['procedures']['procedures_list'].get(appointment_id)
             if not procedure_data:
-                raise ValueError("Процедура не найдена")
+                await query.edit_message_text("Процедура не найдена. Возврат в главное меню.")
+                await main_menu_handler(update, context)
+                return
 
             text = f"Процедура: {procedure_data['name']}"
             keyboard = procedure_detail_keyboard(appointment_id)
@@ -496,7 +474,9 @@ async def handle_back_from_appointment(update: Update, context: ContextTypes.DEF
         elif appointment_type == 'direction':
             direction_data = data['directions']['directions_list'].get(appointment_id)
             if not direction_data:
-                raise ValueError("Направление не найдено")
+                await query.edit_message_text("Направление не найдено. Возврат в главное меню.")
+                await main_menu_handler(update, context)
+                return
 
             text = f"Направление: {direction_data['name']}"
             keyboard = direction_detail_keyboard(appointment_id)
@@ -520,12 +500,18 @@ async def handle_invalid_state(query: Update.callback_query, error_message: str)
             f"⚠️ {error_message}\n\nВозврат в главное меню...",
             reply_markup=main_menu_keyboard()
         )
-    except BadRequest:
-        # Если сообщение уже удалено, отправляем новое
-        await query.message.reply_text(
-            f"⚠️ {error_message}\n\nВозврат в главное меню...",
-            reply_markup=main_menu_keyboard()
-        )
+    except BadRequest as e:
+        if "message is not modified" in str(e):
+            # Если сообщение не изменилось, просто возвращаемся в главное меню
+            await main_menu_handler(query, None)
+        elif "message to edit not found" in str(e):
+            # Если сообщение не найдено, отправляем новое
+            await query.message.reply_text(
+                f"⚠️ {error_message}\n\nВозврат в главное меню...",
+                reply_markup=main_menu_keyboard()
+            )
+        else:
+            raise e
 
 async def cancel_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Отменяет процесс записи"""
