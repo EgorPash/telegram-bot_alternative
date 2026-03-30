@@ -285,8 +285,24 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await handle_invalid_state(query, "Специализация не найдена")
 
+        elif back_to.startswith('service_doctor_'):
+            doctor_key = back_to.replace('service_doctor_', '')
+            # Возвращаемся к списку врачей текущей специализации
+            specialization_key = None
+            for spec_key, specialization in data['specializations'].items():
+                if doctor_key in specialization['doctors']:
+                    specialization_key = spec_key
+                    break
+
+            if specialization_key:
+                specialization_data = data['specializations'][specialization_key]
+                text = f"Выберите врача ({specialization_data['title']}):"
+                keyboard = service_specialists_keyboard(specialization_key)
+                await query.edit_message_text(text, reply_markup=keyboard)
+            else:
+                await handle_invalid_state(query, "Специализация врача не найдена")
+
         elif back_to == 'appointment':
-            # Возврат из процесса записи
             await handle_back_from_appointment(query, context)
 
         else:
