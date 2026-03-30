@@ -2,7 +2,6 @@
 import datetime
 import logging
 import os
-
 from aiogram.types import update
 from telegram import Update
 from telegram.error import BadRequest
@@ -116,25 +115,24 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
     doctor_key = query.data.replace('service_doctor_', '')
 
-    # Сохраняем текущую специализацию в контексте пользователя
-    current_specialization = None
+    # Находим специализацию, к которой относится врач
+    specialization_key = None
     for spec_key, specialization in data['specializations'].items():
         if doctor_key in specialization['doctors']:
-            current_specialization = spec_key
+            specialization_key = spec_key
             break
 
-    if current_specialization:
-        context.user_data['current_specialization'] = current_specialization
+    # Сохраняем специализацию в контексте
+    context.user_data['current_specialization'] = specialization_key
 
     doctor_data = None
-    for specialization in data['specializations'].values():
-        if doctor_key in specialization['doctors']:
-            doctor_data = specialization['doctors'][doctor_key]
-            break
+    if specialization_key:
+        doctor_data = data['specializations'][specialization_key]['doctors'][doctor_key]
+
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-        keyboard = service_doctor_detail_keyboard(doctor_key)
+        keyboard = service_doctor_detail_keyboard(doctor_key, specialization_key)
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
@@ -158,15 +156,25 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('detail_service_doctor_', '')
+
+    # Получаем специализацию из контекста
+    specialization_key = context.user_data.get('current_specialization')
+
     doctor_data = None
-    for specialization in data['specializations'].values():
-        if doctor_key in specialization['doctors']:
-            doctor_data = specialization['doctors'][doctor_key]
-            break
+    if specialization_key:
+        doctor_data = data['specializations'][specialization_key]['doctors'][doctor_key]
+    else:
+        # Если нет в контексте, ищем во всех специализациях
+        for specialization in data['specializations'].values():
+            if doctor_key in specialization['doctors']:
+                doctor_data = specialization['doctors'][doctor_key]
+                specialization_key = specialization['title'].lower()
+                break
+
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
-        keyboard = service_doctor_description_keyboard(doctor_key)
+        keyboard = service_doctor_description_keyboard(doctor_key, specialization_key)
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
@@ -271,6 +279,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text = data['procedures']['title']
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
+
 
         elif back_to.startswith('service_specialization_'):
             specialization_key = back_to.replace('service_specialization_', '')
