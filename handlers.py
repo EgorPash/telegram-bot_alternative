@@ -272,6 +272,7 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
+
         elif back_to.startswith('service_specialization_'):
             specialization_key = back_to.replace('service_specialization_', '')
             if specialization_key in data['specializations']:
@@ -316,7 +317,9 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data['is_from_specialization'] = True
     elif appointment_type == 'service_doctor':
         context.user_data['is_from_specialization'] = True
-        appointment_type = 'doctor'  # Нормализуем тип
+        # Нормализуем тип, сохраняя фактическое происхождение
+        context.user_data['appointment_source'] = 'service_doctor'
+        appointment_type = 'doctor'
     else:
         context.user_data['is_from_specialization'] = False
 
