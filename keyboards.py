@@ -24,6 +24,13 @@ def specialists_keyboard():
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
+def appointment_days_keyboard():
+    keyboard = []
+    for day in data['appointment']['days']:
+        keyboard.append([InlineKeyboardButton(day, callback_data=f"day_{day}")])
+    keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_appointment")])
+    return InlineKeyboardMarkup(keyboard)
+
 # Клавиатура для врача (Записаться и Назад) - для главного меню
 def doctor_detail_keyboard(doctor_key):
     keyboard = [
@@ -72,7 +79,7 @@ def service_specialists_keyboard(specialization_key):
 def service_doctor_detail_keyboard(doctor_key):
     keyboard = [
         [
-            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}"),
             InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
         ],
         [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization")]
@@ -82,7 +89,7 @@ def service_doctor_detail_keyboard(doctor_key):
 # Клавиатура с описанием врача из услуг (Записаться и Назад)
 def service_doctor_description_keyboard(doctor_key):
     keyboard = [
-        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}")],
+        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
         [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
