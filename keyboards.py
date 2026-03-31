@@ -76,21 +76,21 @@ def service_specialists_keyboard(specialization_key):
     return InlineKeyboardMarkup(keyboard)
 
 # Клавиатура для врача из услуг (Записаться, Подробнее и Назад)
-def service_doctor_detail_keyboard(doctor_key, specialization_key=None):
+def service_doctor_detail_keyboard(doctor_key):
     keyboard = [
         [
-            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}"),
+            InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}"),
             InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
         ],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization_{specialization_key}")]
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specializations")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 # Клавиатура с описанием врача из услуг (Записаться и Назад)
-def service_doctor_description_keyboard(doctor_key, specialization_key=None):
+def service_doctor_description_keyboard(doctor_key):
     keyboard = [
-        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_service_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization_{specialization_key}")]
+        [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_detail_{doctor_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
