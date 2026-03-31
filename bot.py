@@ -56,16 +56,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_direction_detail, pattern="^detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_direction_more_detail, pattern="^more_detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))
-    application.add_handler(CallbackQueryHandler(button_back_to_main_menu, pattern="^back_main_menu$"))
-    application.add_handler(CallbackQueryHandler(button_back_to_specialists, pattern="^back_specialists$"))
-    application.add_handler(CallbackQueryHandler(button_back_to_services, pattern="^back_services$"))
-    application.add_handler(CallbackQueryHandler(button_back_to_directions, pattern="^back_directions$"))
-    application.add_handler(
-        CallbackQueryHandler(button_back_to_service_specializations, pattern="^back_service_specializations$"))
-    application.add_handler(
-        CallbackQueryHandler(button_back_to_service_procedures, pattern="^back_service_procedures$"))
-    application.add_handler(
-        CallbackQueryHandler(button_back_to_service_specialization, pattern="^back_service_specialization_"))
+    application.add_handler(CallbackQueryHandler(button_back, pattern="^back_"))
 
     appointment_conv_handler = ConversationHandler(
         entry_points=[
