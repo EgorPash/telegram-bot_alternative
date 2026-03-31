@@ -48,7 +48,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_doctor, pattern="^doctor_"))
     application.add_handler(CallbackQueryHandler(button_service_specialists, pattern="^service_specialists$"))
     application.add_handler(CallbackQueryHandler(button_specialization, pattern="^specialization_"))
-    application.add_handler(CallbackQueryHandler(select_service_doctor, pattern="^select_service_doctor_"))
+    application.add_handler(CallbackQueryHandler(button_service_doctor, pattern="^service_doctor_"))
     application.add_handler(CallbackQueryHandler(button_service_doctor_detail, pattern="^detail_service_doctor_"))
     application.add_handler(CallbackQueryHandler(button_service_procedures, pattern="^service_procedures$"))
     application.add_handler(CallbackQueryHandler(button_procedure, pattern="^procedure_"))

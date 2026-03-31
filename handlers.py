@@ -2,6 +2,7 @@
 import datetime
 import logging
 import os
+
 from aiogram.types import update
 from telegram import Update
 from telegram.error import BadRequest
@@ -110,57 +111,62 @@ async def button_specialization(update: Update, context: ContextTypes.DEFAULT_TY
     await query.edit_message_text(text, reply_markup=keyboard)
 
 # Обработчик выбора врача из услуг
-async def select_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    doctor_key = query.data.replace('service_doctor_', '')
 
-    try:
-        doctor_key = query.data.replace('select_service_doctor_', '')
-        doctor = None
+    # Сохраняем текущую специализацию в контексте пользователя
+    current_specialization = None
+    for spec_key, specialization in data['specializations'].items():
+        if doctor_key in specialization['doctors']:
+            current_specialization = spec_key
+            break
 
-        # Поиск врача во всех специализациях
-        for specialization in data['specializations'].values():
-            if doctor_key in specialization['doctors']:
-                doctor = specialization['doctors'][doctor_key]
-                break
+    if current_specialization:
+        context.user_data['current_specialization'] = current_specialization
 
-        if not doctor:
-            await handle_invalid_state(query, "Врач не найден")
-            return
-
-        # Отображение информации о враче
-        text = f"{doctor['name']}\n\n{doctor['description']}"
+    doctor_data = None
+    for specialization in data['specializations'].values():
+        if doctor_key in specialization['doctors']:
+            doctor_data = specialization['doctors'][doctor_key]
+            break
+    if doctor_data:
+        photo_path = doctor_data.get('photo')
+        text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
         keyboard = service_doctor_detail_keyboard(doctor_key)
-        await query.edit_message_text(text, reply_markup=keyboard)
-
-    except Exception as e:
-        logger.error(f"Ошибка при выборе врача: {e}")
-        await handle_invalid_state(query, "Произошла ошибка при выборе врача")
+        if photo_path and os.path.exists(photo_path):
+            with open(photo_path, 'rb') as photo:
+                await query.message.reply_photo(
+                    photo=photo,
+                    caption=text,
+                    reply_markup=keyboard,
+                    parse_mode='Markdown'
+                )
+            await query.message.delete()
+        else:
+            await query.edit_message_text(
+                text + "\n\n📷 *Фотография не найдена*",
+                reply_markup=keyboard,
+                parse_mode='Markdown'
+            )
+    else:
+        await query.edit_message_text("Данные о враче не найдены.")
 
 # Обработчик кнопки "Подробнее" о враче из услуг
 async def button_service_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('detail_service_doctor_', '')
-
-    # Получаем специализацию из контекста
-    specialization_key = context.user_data.get('current_specialization')
-
     doctor_data = None
-    if specialization_key:
-        doctor_data = data['specializations'][specialization_key]['doctors'][doctor_key]
-    else:
-        # Если нет в контексте, ищем во всех специализациях
-        for specialization in data['specializations'].values():
-            if doctor_key in specialization['doctors']:
-                doctor_data = specialization['doctors'][doctor_key]
-                specialization_key = specialization['title'].lower()
-                break
-
+    for specialization in data['specializations'].values():
+        if doctor_key in specialization['doctors']:
+            doctor_data = specialization['doctors'][doctor_key]
+            break
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
-        keyboard = service_doctor_description_keyboard(doctor_key, specialization_key)
+        keyboard = service_doctor_description_keyboard(doctor_key)
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
@@ -261,25 +267,17 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_specializations_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
-
         elif back_to == 'service_procedures':
             text = data['procedures']['title']
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
-
         elif back_to.startswith('service_specialization_'):
-            doctor_key = back_to.replace('service_specialization_', '')
-            # Находим специализацию, к которой относится врач
-            current_specialization = None
-            for spec_key, specialization in data['specializations'].items():
-                if doctor_key in specialization['doctors']:
-                    current_specialization = spec_key
-                    break
-            if current_specialization:
-                specialization_data = data['specializations'][current_specialization]
+            specialization_key = back_to.replace('service_specialization_', '')
+            if specialization_key in data['specializations']:
+                specialization_data = data['specializations'][specialization_key]
                 text = f"Выберите врача ({specialization_data['title']}):"
-                keyboard = service_specialists_keyboard(current_specialization)
+                keyboard = service_specialists_keyboard(specialization_key)
                 await query.edit_message_text(text, reply_markup=keyboard)
             else:
                 await handle_invalid_state(query, "Специализация не найдена")
@@ -293,7 +291,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"Ошибка в обработчике возврата: {e}")
         await handle_invalid_state(query, "Произошла ошибка при возврате")
-
 
 # Обработчик для всех кнопок "Записаться"
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):

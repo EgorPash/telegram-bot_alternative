@@ -67,23 +67,11 @@ def service_specializations_keyboard():
 
 # Клавиатура со списком врачей специализации (из услуг)
 def service_specialists_keyboard(specialization_key):
-    specialization = data['specializations'][specialization_key]
     keyboard = []
-    row = []
-
-    for doctor_key, doctor_info in specialization['doctors'].items():
-        button = InlineKeyboardButton(
-            doctor_info['name'],
-            callback_data=f"select_service_doctor_{doctor_key}"
-        )
-        row.append(button)
-        if len(row) == 2:
-            keyboard.append(row)
-            row = []
-
-    if row:
-        keyboard.append(row)
-
+    specialization = data['specializations'][specialization_key]
+    for key, doctor in specialization['doctors'].items():
+        button = InlineKeyboardButton(f"{doctor['name']}", callback_data=f"service_doctor_{key}")
+        keyboard.append([button])
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_service_specializations")])
     return InlineKeyboardMarkup(keyboard)
 
@@ -94,7 +82,7 @@ def service_doctor_detail_keyboard(doctor_key):
             InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}"),
             InlineKeyboardButton("📖 Подробнее", callback_data=f"detail_service_doctor_{doctor_key}")
         ],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization_{doctor_key}")]
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -102,7 +90,7 @@ def service_doctor_detail_keyboard(doctor_key):
 def service_doctor_description_keyboard(doctor_key):
     keyboard = [
         [InlineKeyboardButton("📅 Записаться", callback_data=f"appointment_doctor_{doctor_key}")],
-        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_specialization_{doctor_key}")]
+        [InlineKeyboardButton("◀️ Назад", callback_data=f"back_service_doctor_{doctor_key}")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
