@@ -360,6 +360,7 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Для врачей из специализаций сохраняем контекст специализации
     if appointment_type == 'doctor':
+        # Пытаемся найти специализацию для врача
         specialization_key = None
         for spec_key, specialization in data['specializations'].items():
             if appointment_id in specialization['doctors']:
@@ -404,19 +405,45 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные для подтверждения
     selected_day = context.user_data['selected_day']
     name = context.user_data['name']
-    appointment_type = context.user_data['appointment_type']
-    appointment_id = context.user_data['appointment_id']
 
     # Формируем подтверждение пользователю
     confirmation_message = data['appointment']['confirmation_message']
+    await update.message.reply_text(confirmation_message)
 
     # Очищаем данные пользователя
     context.user_data.clear()
 
     # Возвращаем в главное меню
-    await update.message.reply_text(confirmation_message)
     await main_menu_handler(update, context)
     return ConversationHandler.END
+
+def get_service_or_doctor_name(appointment_type: str, appointment_id: str) -> str:
+    """Получает название услуги/врача по типу и ID"""
+    try:
+        if appointment_type == 'doctor':
+            # Сначала ищем в основных специалистах
+            if appointment_id in data['specialists']['doctors']:
+                doctor_data = data['specialists']['doctors'][appointment_id]
+                return f"{doctor_data['name']} ({doctor_data['specialization']})"
+            # Затем в специализациях
+            for spec_key, specialization in data['specializations'].items():
+                if appointment_id in specialization['doctors']:
+                    doctor_data = specialization['doctors'][appointment_id]
+                    return f"{doctor_data['name']} ({doctor_data['specialization']})"
+
+        elif appointment_type == 'procedure':
+            procedure_data = data['procedures']['procedures_list'].get(appointment_id)
+            if procedure_data:
+                return procedure_data['name']
+
+        elif appointment_type == 'direction':
+            direction_data = data['directions']['directions_list'].get(appointment_id)
+            if direction_data:
+                return direction_data['name']
+
+    except Exception as e:
+        logger.error(f"Ошибка получения названия услуги/врача: {e}")
+    return "Неизвестная услуга"
 
 async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Отправляет пользователя в главное меню"""
