@@ -67,11 +67,23 @@ def service_specializations_keyboard():
 
 # Клавиатура со списком врачей специализации (из услуг)
 def service_specialists_keyboard(specialization_key):
-    keyboard = []
     specialization = data['specializations'][specialization_key]
-    for key, doctor in specialization['doctors'].items():
-        button = InlineKeyboardButton(f"{doctor['name']}", callback_data=f"service_doctor_{key}")
-        keyboard.append([button])
+    keyboard = []
+    row = []
+
+    for doctor_key, doctor_info in specialization['doctors'].items():
+        button = InlineKeyboardButton(
+            doctor_info['name'],
+            callback_data=f"select_service_doctor_{doctor_key}"
+        )
+        row.append(button)
+        if len(row) == 2:
+            keyboard.append(row)
+            row = []
+
+    if row:
+        keyboard.append(row)
+
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="back_service_specializations")])
     return InlineKeyboardMarkup(keyboard)
 

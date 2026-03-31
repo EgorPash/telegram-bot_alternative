@@ -110,46 +110,32 @@ async def button_specialization(update: Update, context: ContextTypes.DEFAULT_TY
     await query.edit_message_text(text, reply_markup=keyboard)
 
 # Обработчик выбора врача из услуг
-async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def select_service_doctor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    doctor_key = query.data.replace('service_doctor_', '')
 
-    # Находим специализацию, к которой относится врач
-    specialization_key = None
-    for spec_key, specialization in data['specializations'].items():
-        if doctor_key in specialization['doctors']:
-            specialization_key = spec_key
-            break
+    try:
+        doctor_key = query.data.replace('select_service_doctor_', '')
+        doctor = None
 
-    # Сохраняем специализацию в контексте
-    context.user_data['current_specialization'] = specialization_key
+        # Поиск врача во всех специализациях
+        for specialization in data['specializations'].values():
+            if doctor_key in specialization['doctors']:
+                doctor = specialization['doctors'][doctor_key]
+                break
 
-    doctor_data = None
-    if specialization_key:
-        doctor_data = data['specializations'][specialization_key]['doctors'][doctor_key]
+        if not doctor:
+            await handle_invalid_state(query, "Врач не найден")
+            return
 
-    if doctor_data:
-        photo_path = doctor_data.get('photo')
-        text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-        keyboard = service_doctor_detail_keyboard(doctor_key, specialization_key)
-        if photo_path and os.path.exists(photo_path):
-            with open(photo_path, 'rb') as photo:
-                await query.message.reply_photo(
-                    photo=photo,
-                    caption=text,
-                    reply_markup=keyboard,
-                    parse_mode='Markdown'
-                )
-            await query.message.delete()
-        else:
-            await query.edit_message_text(
-                text + "\n\n📷 *Фотография не найдена*",
-                reply_markup=keyboard,
-                parse_mode='Markdown'
-            )
-    else:
-        await query.edit_message_text("Данные о враче не найдены.")
+        # Отображение информации о враче
+        text = f"{doctor['name']}\n\n{doctor['description']}"
+        keyboard = service_doctor_detail_keyboard(doctor_key)
+        await query.edit_message_text(text, reply_markup=keyboard)
+
+    except Exception as e:
+        logger.error(f"Ошибка при выборе врача: {e}")
+        await handle_invalid_state(query, "Произошла ошибка при выборе врача")
 
 # Обработчик кнопки "Подробнее" о враче из услуг
 async def button_service_doctor_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
