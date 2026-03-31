@@ -282,7 +282,9 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
+
         elif back_to.startswith('service_specialization_'):
+            # Добавленный блок обработки
             specialization_key = back_to.replace('service_specialization_', '')
             if specialization_key in data['specializations']:
                 specialization_data = data['specializations'][specialization_key]

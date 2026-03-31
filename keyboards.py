@@ -85,10 +85,9 @@ def service_doctor_detail_keyboard(doctor_key, specialization_key=None):
     ]
 
     if specialization_key:
-        # Если известна специализация, возвращаемся к списку врачей этой специализации
+        # Правильный формат callback_data
         back_callback = f"back_service_specialization_{specialization_key}"
     else:
-        # Если специализация неизвестна, возвращаемся к списку специализаций
         back_callback = "back_service_specializations"
 
     keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data=back_callback)])
