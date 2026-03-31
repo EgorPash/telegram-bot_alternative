@@ -243,64 +243,59 @@ async def button_direction_more_detail(update: Update, context: ContextTypes.DEF
     keyboard = direction_detailed_description_keyboard(direction_key)
     await query.edit_message_text(text, reply_markup=keyboard, parse_mode='Markdown')
 
-# Обработчик кнопки "Назад"
-async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_back_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    back_data = query.data
-    back_to = query.data.replace('back_', '')
+    welcome_text = data['start_message']
+    keyboard = main_menu_keyboard()
+    await query.message.delete()
+    await query.message.reply_text(welcome_text, reply_markup=keyboard)
 
-    try:
-        if back_to == 'main_menu':
-            text = data['start_message']
-            reply_keyboard = main_menu_keyboard()
-            await query.message.delete()
-            await query.message.reply_text(text, reply_markup=reply_keyboard)
+async def button_back_to_specialists(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = data['specialists']['title']
+    keyboard = specialists_keyboard()
+    await query.message.delete()
+    await query.message.reply_text(text, reply_markup=keyboard)
 
-        elif back_to == 'specialists':
-            text = data['specialists']['title']
-            keyboard = specialists_keyboard()
-            await query.message.delete()
-            await query.message.reply_text(text, reply_markup=keyboard)
+async def button_back_to_services(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = data['services']['title']
+    keyboard = services_keyboard()
+    await query.edit_message_text(text, reply_markup=keyboard)
 
-        elif back_to == 'services':
-            text = data['services']['title']
-            keyboard = services_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
+async def button_back_to_directions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = data['directions']['title']
+    keyboard = directions_keyboard()
+    await query.edit_message_text(text, reply_markup=keyboard)
 
-        elif back_to == 'directions':
-            text = data['directions']['title']
-            keyboard = directions_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
+async def button_back_to_service_specializations(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = "Выберите специализацию:"
+    keyboard = service_specializations_keyboard()
+    await query.edit_message_text(text, reply_markup=keyboard)
 
-        elif back_to == 'service_specializations':
-            text = "Выберите специализацию:"
-            keyboard = service_specializations_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
+async def button_back_to_service_procedures(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = data['procedures']['title']
+    keyboard = service_procedures_keyboard()
+    await query.edit_message_text(text, reply_markup=keyboard)
 
-        elif back_to == 'service_procedures':
-            text = data['procedures']['title']
-            keyboard = service_procedures_keyboard()
-            await query.edit_message_text(text, reply_markup=keyboard)
-
-        elif back_data.startswith('back_service_specialization_'):
-         specialization_key = back_data.replace('back_service_specialization_', '')
-         if specialization_key in data['specializations']:
-            specialization_data = data['specializations'][specialization_key]
-            text = f"Выберите врача ({specialization_data['title']}):"
-            keyboard = service_specialists_keyboard(specialization_key)
-            await query.edit_message_text(text, reply_markup=keyboard)
-            return
-
-        elif back_to == 'appointment':
-            await handle_back_from_appointment(update, context)
-
-        else:
-            await handle_invalid_state(query, f"Неизвестный пункт возврата: {back_to}")
-
-    except Exception as e:
-        logger.error(f"Ошибка в обработчике возврата: {e}")
-        await handle_invalid_state(query, "Произошла ошибка при возврате")
+async def button_back_to_service_specialization(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    specialization_key = query.data.replace('back_service_specialization_', '')
+    if specialization_key in data['specializations']:
+        specialization_data = data['specializations'][specialization_key]
+        text = f"Выберите врача ({specialization_data['title']}):"
+        keyboard = service_specialists_keyboard(specialization_key)
+        await query.edit_message_text(text, reply_markup=keyboard)
 
 # Обработчик для всех кнопок "Записаться"
 async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -324,9 +319,10 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Для врачей из специализаций сохраняем контекст
     if appointment_type == 'doctor':
         context.user_data['is_from_specialization'] = True
+        context.user_data['specialization_key'] = context.user_data.get('current_specialization')
     elif appointment_type == 'service_doctor':
         context.user_data['is_from_specialization'] = True
-        appointment_type = 'doctor'  # Нормализуем тип
+        context.user_data['specialization_key'] = context.user_data.get('current_specialization')
     else:
         context.user_data['is_from_specialization'] = False
 
@@ -491,6 +487,31 @@ async def handle_back_from_appointment(update: Update, context: ContextTypes.DEF
             text = f"Направление: {direction_data['name']}"
             keyboard = direction_detail_keyboard(appointment_id)
             await query.edit_message_text(text, reply_markup=keyboard)
+
+        elif appointment_type == 'service_doctor':
+            specialization_key = context.user_data.get('specialization_key')
+            if specialization_key and specialization_key in data['specializations']:
+                doctor_data = data['specializations'][specialization_key]['doctors'].get(appointment_id)
+                if doctor_data:
+                    photo_path = doctor_data.get('photo')
+                    text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+                    keyboard = service_doctor_detail_keyboard(appointment_id, specialization_key)
+                    if photo_path and os.path.exists(photo_path):
+                        with open(photo_path, 'rb') as photo:
+                            await query.message.reply_photo(
+                                photo=photo,
+                                caption=text,
+                                reply_markup=keyboard,
+                                parse_mode='Markdown'
+                            )
+                        await query.message.delete()
+                    else:
+                        await query.edit_message_text(
+                            text + "\n\n📷 *Фотография не найдена*",
+                            reply_markup=keyboard,
+                            parse_mode='Markdown'
+                        )
+                    return
 
         else:
             await query.edit_message_text("Неизвестный тип записи. Возврат в главное меню.")
