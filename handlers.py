@@ -346,8 +346,9 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     appointment_data = query.data
 
+    # Разбираем данные записи
     parts = appointment_data.split('_')
-    if len(parts) < 2 or parts[0] != 'appointment':
+    if len(parts) < 2:
         await query.edit_message_text("Ошибка: неверный формат данных записи")
         return
 
@@ -360,7 +361,6 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Для врачей из специализаций сохраняем контекст специализации
     if appointment_type == 'doctor':
-        # Пытаемся найти специализацию для врача
         specialization_key = None
         for spec_key, specialization in data['specializations'].items():
             if appointment_id in specialization['doctors']:
@@ -369,11 +369,6 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         if specialization_key:
             context.user_data['specialization_key'] = specialization_key
-            context.user_data['is_from_specialization'] = True
-        else:
-            context.user_data['is_from_specialization'] = False
-    else:
-        context.user_data['is_from_specialization'] = False
 
     text = "Выберите удобный день для записи:"
     keyboard = appointment_days_keyboard()
@@ -381,30 +376,40 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.edit_message_text(text, reply_markup=keyboard)
     return DAY
 
-async def select_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    selected_day = query.data.replace('day_', '')
-    context.user_data['selected_day'] = selected_day
-
-    await query.edit_message_text("Отлично! Теперь введите ваше имя:")
-    return NAME
-
-async def get_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.message.text
-    context.user_data['name'] = name
-
-    await update.message.reply_text("Спасибо! Теперь введите ваш номер телефона:")
-    return PHONE
-
 async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = update.message.text
     context.user_data['phone'] = phone
 
     # Получаем данные для подтверждения
-    selected_day = context.user_data['selected_day']
-    name = context.user_data['name']
+    selected_day = context.user_data.get('selected_day', 'Не указан')
+    name = context.user_data.get('name', 'Не указано')
+    appointment_type = context.user_data.get('appointment_type', 'неизвестный')
+    appointment_id = context.user_data.get('appointment_id', 'неизвестный')
+
+    # Формируем текст для администратора
+    admin_chat_id = data['appointment']['admin_chat_id']
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Получаем имя услуги/врача
+    service_or_doctor = get_service_or_doctor_name(appointment_type, appointment_id)
+
+    notification_text = data['appointment']['notification_template'].format(
+        name=name,
+        phone=phone,
+        day=selected_day,
+        service_or_doctor=service_or_doctor,
+        timestamp=timestamp
+    )
+
+    # Отправляем уведомление администратору
+    try:
+        await context.bot.send_message(
+            chat_id=admin_chat_id,
+            text=notification_text,
+            parse_mode='Markdown'
+        )
+    except Exception as e:
+        logger.error(f"Ошибка отправки уведомления администратору: {e}")
 
     # Формируем подтверждение пользователю
     confirmation_message = data['appointment']['confirmation_message']
