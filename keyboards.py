@@ -85,7 +85,7 @@ def service_doctor_detail_keyboard(doctor_key, specialization_key=None):
     ]
 
     if specialization_key:
-        # Правильный формат callback_data
+        # Исправленный колбек - начинается с service_specialization_
         back_callback = f"back_service_specialization_{specialization_key}"
     else:
         back_callback = "back_service_specializations"
