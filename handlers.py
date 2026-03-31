@@ -134,7 +134,7 @@ async def button_service_doctor(update: Update, context: ContextTypes.DEFAULT_TY
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
-        keyboard = service_doctor_detail_keyboard(doctor_key)
+        keyboard = service_doctor_detail_keyboard(doctor_key, current_specialization)  # Передаем specialization_key
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
@@ -158,6 +158,10 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
     query = update.callback_query
     await query.answer()
     doctor_key = query.data.replace('detail_service_doctor_', '')
+
+    # Получаем текущую специализацию из контекста
+    current_specialization = context.user_data.get('current_specialization')
+
     doctor_data = None
     for specialization in data['specializations'].values():
         if doctor_key in specialization['doctors']:
@@ -166,7 +170,7 @@ async def button_service_doctor_detail(update: Update, context: ContextTypes.DEF
     if doctor_data:
         photo_path = doctor_data.get('photo')
         text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}\n\n{doctor_data['description']}"
-        keyboard = service_doctor_description_keyboard(doctor_key)
+        keyboard = service_doctor_description_keyboard(doctor_key, current_specialization)  # Передаем specialization_key
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, 'rb') as photo:
                 await query.message.reply_photo(
@@ -282,6 +286,44 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await handle_invalid_state(query, "Специализация не найдена")
 
+
+        elif back_to.startswith('service_doctor_'):
+            parts = back_to.split('_')
+            if len(parts) == 3:
+                doctor_key = parts[2]
+                specialization_key = parts[3]
+                if specialization_key in data['specializations']:
+                    doctor_data = None
+                    for specialization in data['specializations'].values():
+                        if doctor_key in specialization['doctors']:
+                            doctor_data = specialization['doctors'][doctor_key]
+                            break
+                    if doctor_data:
+                        photo_path = doctor_data.get('photo')
+                        text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+                        keyboard = service_doctor_detail_keyboard(doctor_key, specialization_key)
+                        if photo_path and os.path.exists(photo_path):
+                            with open(photo_path, 'rb') as photo:
+                                await query.message.reply_photo(
+                                    photo=photo,
+                                    caption=text,
+                                    reply_markup=keyboard,
+                                    parse_mode='Markdown'
+                                )
+                            await query.message.delete()
+                        else:
+                            await query.edit_message_text(
+                                text + "\n\n📷 *Фотография не найдена*",
+                                reply_markup=keyboard,
+                                parse_mode='Markdown'
+                            )
+                    else:
+                        await handle_invalid_state(query, "Данные о враче не найдены")
+                else:
+                    await handle_invalid_state(query, "Специализация не найдена")
+            else:
+                await handle_invalid_state(query, "Некорректный формат данных врача")
+
         elif back_to == 'appointment':
             await handle_back_from_appointment(update, context)
 
@@ -305,20 +347,20 @@ async def button_appointment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     appointment_type = parts[1]
-    appointment_id = '_'.join(parts[2:])
+
+    # Для записей на врачей из услуг
+    if appointment_type == 'service_doctor' and len(parts) >= 3:
+        appointment_id = parts[2]
+        # Сохраняем текущую специализацию
+        current_specialization = context.user_data.get('current_specialization')
+        if current_specialization:
+            context.user_data['appointment_specialization'] = current_specialization
+    else:
+        appointment_id = '_'.join(parts[2:])
 
     # Сохраняем данные для возврата
     context.user_data['appointment_type'] = appointment_type
     context.user_data['appointment_id'] = appointment_id
-
-    # Для врачей из специализаций сохраняем контекст
-    if appointment_type == 'doctor':
-        context.user_data['is_from_specialization'] = True
-    elif appointment_type == 'service_doctor':
-        context.user_data['is_from_specialization'] = True
-        appointment_type = 'doctor'  # Нормализуем тип
-    else:
-        context.user_data['is_from_specialization'] = False
 
     text = "Выберите удобный день для записи:"
     keyboard = appointment_days_keyboard()
