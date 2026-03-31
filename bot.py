@@ -81,6 +81,7 @@ def main() -> None:
             MessageHandler(filters.ALL, cancel_appointment)
         ]
     )
+    application.add_handler(appointment_conv_handler)
 
     # Запускаем бота (бесконечный опрос серверов Telegram)
     print("Бот запущен...")
