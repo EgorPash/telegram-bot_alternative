@@ -405,22 +405,10 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные для подтверждения
     selected_day = context.user_data['selected_day']
     name = context.user_data['name']
-    appointment_type = context.user_data.get('appointment_type')
-    appointment_id = context.user_data.get('appointment_id')
 
     # Формируем подтверждение пользователю
-    source_name = get_service_or_doctor_name(appointment_type, appointment_id)
-
-    confirmation_message = (
-        f"📋 **Ваша заявка на запись**\n\n"
-        f"👤 *Имя:* {name}\n"
-        f"📱 *Телефон:* {phone}\n"
-        f"🗓 *День:* {selected_day}\n"
-        f"📌 *Источник:* {source_name}\n\n"
-        f"Спасибо за заявку! Мы свяжемся с вами для уточнения деталей."
-    )
-
-    await update.message.reply_text(confirmation_message, parse_mode='Markdown')
+    confirmation_message = data['appointment']['confirmation_message']
+    await update.message.reply_text(confirmation_message)
 
     # Очищаем данные пользователя
     context.user_data.clear()
