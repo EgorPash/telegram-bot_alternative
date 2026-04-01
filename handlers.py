@@ -282,7 +282,6 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
-
         elif back_to.startswith('service_specialization_'):
             specialization_key = back_to.replace('service_specialization_', '')
             if specialization_key in data['specializations']:
@@ -293,18 +292,40 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await handle_invalid_state(query, "Специализация не найдена")
 
-
         elif back_to.startswith('service_doctor_'):
+            # Обработка возврата с описания врача к его карточке
             parts = back_to.split('_')
             if len(parts) >= 3:
-                specialization_key = parts[2]
+                doctor_key = parts[2]
+                specialization_key = '_'.join(parts[3:])
+                # Получаем данные врача
+                doctor_data = None
+
                 if specialization_key in data['specializations']:
-                    specialization_data = data['specializations'][specialization_key]
-                    text = f"Выберите врача ({specialization_data['title']}):"
-                    keyboard = service_specialists_keyboard(specialization_key)
-                    await query.edit_message_text(text, reply_markup=keyboard)
+                    doctor_data = data['specializations'][specialization_key]['doctors'].get(doctor_key)
+
+                if doctor_data:
+                    photo_path = doctor_data.get('photo')
+                    text = f"*{doctor_data['name']}*\nСпециализация: {doctor_data['specialization']}"
+                    keyboard = service_doctor_detail_keyboard(doctor_key, specialization_key)
+                    if photo_path and os.path.exists(photo_path):
+                        with open(photo_path, 'rb') as photo:
+                            await query.message.reply_photo(
+                                photo=photo,
+                                caption=text,
+                                reply_markup=keyboard,
+                                parse_mode='Markdown'
+                            )
+                        await query.message.delete()
+                    else:
+                        await query.edit_message_text(
+                            text + "\n\n📷 *Фотография не найдена*",
+                            reply_markup=keyboard,
+                            parse_mode='Markdown'
+                        )
                 else:
-                    await handle_invalid_state(query, "Специализация не найдена")
+
+                    await handle_invalid_state(query, "Врач не найден")
             else:
                 await handle_invalid_state(query, "Неверный формат данных возврата")
 
