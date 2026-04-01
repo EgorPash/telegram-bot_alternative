@@ -408,6 +408,14 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные для подтверждения
     selected_day = context.user_data['selected_day']
     name = context.user_data['name']
+    appointment_type = context.user_data.get('appointment_type')
+    appointment_id = context.user_data.get('appointment_id')
+
+    # Получаем название услуги/врача
+    service_or_doctor = get_service_or_doctor_name(appointment_type, appointment_id)
+
+    # Сохраняем данные в контексте (если нужно)
+    context.user_data['service_or_doctor'] = service_or_doctor
 
     # Формируем подтверждение пользователю
     confirmation_message = data['appointment']['confirmation_message']
@@ -447,6 +455,7 @@ def get_service_or_doctor_name(appointment_type: str, appointment_id: str) -> st
     except Exception as e:
         logger.error(f"Ошибка получения названия услуги/врача: {e}")
     return "Неизвестная услуга"
+
 
 async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Отправляет пользователя в главное меню"""
