@@ -282,13 +282,16 @@ async def button_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = service_procedures_keyboard()
             await query.edit_message_text(text, reply_markup=keyboard)
 
+
         elif back_to.startswith('service_specialization_'):
             specialization_key = back_to.replace('service_specialization_', '')
             if specialization_key in data['specializations']:
                 specialization_data = data['specializations'][specialization_key]
                 text = f"Выберите врача ({specialization_data['title']}):"
                 keyboard = service_specialists_keyboard(specialization_key)
-                await query.edit_message_text(text, reply_markup=keyboard)
+                # Удаляем текущее сообщение и отправляем новое
+                await query.message.delete()
+                await query.message.reply_text(text, reply_markup=keyboard)
             else:
                 await handle_invalid_state(query, "Специализация не найдена")
 
