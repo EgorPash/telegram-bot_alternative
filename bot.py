@@ -58,6 +58,9 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))
     application.add_handler(CallbackQueryHandler(button_back, pattern="^back_"))
 
+    # Обработчики текстовых сообщений из опроса
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, survey_response))
+
     # Добавляем обработчики для кнопок расширенного опроса
     application.add_handler(MessageHandler(filters.Regex("^Наш сайт$"), website))
     application.add_handler(MessageHandler(filters.Regex("^Специалисты$"), specialists_main))
