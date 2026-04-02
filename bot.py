@@ -42,7 +42,7 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.Regex("^Специалисты$"), specialists_main))
     application.add_handler(MessageHandler(filters.Regex("^Услуги$"), services_main))
     application.add_handler(MessageHandler(filters.Regex("^Направления$"), directions_main))
-    application.add_handler(MessageHandler(filters.Regex("^Наш сайт$"), website))
+    application.add_handler(MessageHandler(filters.Regex("^Наш сайт$"), website_main))
 
     # Обработчики нажатий на inline-кнопки
     application.add_handler(CallbackQueryHandler(button_doctor, pattern="^doctor_"))
@@ -57,6 +57,19 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(button_direction_more_detail, pattern="^more_detail_direction_"))
     application.add_handler(CallbackQueryHandler(button_appointment, pattern="^appointment_"))
     application.add_handler(CallbackQueryHandler(button_back, pattern="^back_"))
+
+    # Добавляем обработчики для кнопок расширенного опроса
+    application.add_handler(MessageHandler(filters.Regex("^Наш сайт$"), website))
+    application.add_handler(MessageHandler(filters.Regex("^Специалисты$"), specialists_main))
+    application.add_handler(MessageHandler(filters.Regex("^Контакты$"), contacts))
+    application.add_handler(MessageHandler(filters.Regex("^Услуги$"), services_main))
+    application.add_handler(MessageHandler(filters.Regex("^Оставить отзыв$"), leave_review))
+    application.add_handler(MessageHandler(filters.Regex("^Записаться$"), appointment))
+    application.add_handler(MessageHandler(filters.Regex("^Главное меню$"), main_menu_from_survey))
+    application.add_handler(MessageHandler(filters.Regex("^Стоимость услуг$"), cost_services))
+    application.add_handler(MessageHandler(filters.Regex("^Лекции и курсы$"), lectures_courses))
+    application.add_handler(MessageHandler(filters.Regex("^Вопросы по лечению и консультации$"), questions_consultation))
+
 
     appointment_conv_handler = ConversationHandler(
         entry_points=[

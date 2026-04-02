@@ -19,6 +19,9 @@ NAME, PHONE, DAY = range(3)
 with open('data.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
+# Состояние опроса: None, 'waiting_for_response', 'completed'
+SURVEY_STATE = {}
+
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = data['start_message']
@@ -39,21 +42,79 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем контактные номера
     await update.message.reply_text(contact_numbers)
 
-    # Отправляем главное меню
-    keyboard = main_menu_keyboard()
-    await update.message.reply_text("Главное меню:", reply_markup=keyboard)
+    # Запускаем опрос
+    SURVEY_STATE[update.effective_chat.id] = 'waiting_for_response'
+    await update.message.reply_text(
+        "Чтобы отписаться, нажмите в этот чат \"стоп\".",
+        reply_markup=initial_survey_keyboard()
+    )
 
-# Обработчик текстового сообщения "Специалисты" (из главного меню)
+# Обработчик текстовых сообщений — для опроса
+async def survey_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    user_input = update.message.text.strip().lower()
+
+    if SURVEY_STATE.get(chat_id) != 'waiting_for_response':
+        return  # Не в опросе — игнорируем
+
+    if user_input == "стоп":
+        SURVEY_STATE[chat_id] = 'completed'
+        await update.message.reply_text("Вы отписались от опроса. Бот больше не будет вас беспокоить.", reply_markup=None)
+        return
+
+    if user_input == "да":
+        SURVEY_STATE[chat_id] = 'completed'
+        await update.message.reply_text("Рады, что мы с вами знакомы! Выберите нужный пункт.", reply_markup=main_menu_keyboard())
+        return
+
+    if user_input == "нет":
+        SURVEY_STATE[chat_id] = 'completed'
+        await update.message.reply_text(
+            "Давайте знакомиться!",
+            reply_markup=extended_survey_keyboard()
+        )
+        return
+
+    # Если ввод не распознан
+    await update.message.reply_text(
+        "Пожалуйста, ответьте 'Да', 'Нет' или напишите 'стоп'.",
+        reply_markup=initial_survey_keyboard()
+    )
+
+# --- Обработчики кнопок из расширенного опроса ---
+async def website(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Наш сайт: https://alternative-clinic.ru")
+
 async def specialists_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = data['specialists']['title']
     keyboard = specialists_keyboard()
     await update.message.reply_text(text, reply_markup=keyboard)
 
-# Обработчик текстового сообщения "Услуги"
 async def services_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = data['services']['title']
     keyboard = services_keyboard()
     await update.message.reply_text(text, reply_markup=keyboard)
+
+async def contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(data['contacts'])
+
+async def leave_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Спасибо за желание оставить отзыв! Пожалуйста, напишите ваш отзыв в этом чате, и мы его обязательно прочитаем.")
+
+async def appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Функция записи будет реализована позже")
+
+async def main_menu_from_survey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Главное меню:", reply_markup=main_menu_keyboard())
+
+async def cost_services(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Стоимость услуг: подробности на сайте https://alternative-clinic.ru/prices")
+
+async def lectures_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Лекции и курсы: следите за обновлениями на сайте и в соцсетях.")
+
+async def questions_consultation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Вопросы по лечению и консультации: напишите нам в чат — мы ответим в течение 24 часов.")
 
 # Обработчик текстового сообщения "Направления"
 async def directions_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -62,7 +123,7 @@ async def directions_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, reply_markup=keyboard)
 
 # Обработчик текстового сообщения "Наш сайт"
-async def website(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def website_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Наш сайт: https://alternative-clinic.ru")
 
 # --- Обработчики CallbackQuery (нажатия на inline-кнопки) ---
