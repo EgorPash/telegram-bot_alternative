@@ -12,30 +12,36 @@ def main_menu_keyboard():
     keyboard = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, input_field_placeholder="Выберите опцию")
 
-# --- Клавиатура для начального опроса (после /start) ---
 def initial_survey_keyboard():
-    buttons = [
-        [KeyboardButton("Да")],
-        [KeyboardButton("Нет")],
-        [KeyboardButton("стоп")]
-    ]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True, one_time_keyboard=True, input_field_placeholder="Ответьте 'Да', 'Нет' или 'стоп'")
+    """Клавиатура первого вопроса опроса."""
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton("Да")], [KeyboardButton("Нет")], [KeyboardButton("стоп")]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Ответьте «Да», «Нет» или «стоп»"
+    )
 
-# --- Клавиатура расширенного опроса ---
 def extended_survey_keyboard():
+    """Клавиатура расширенного меню (ветка «Нет»)."""
     buttons = [
-        [KeyboardButton("Наш сайт")],
-        [KeyboardButton("Специалисты")],
-        [KeyboardButton("Контакты")],
-        [KeyboardButton("Услуги")],
-        [KeyboardButton("Оставить отзыв")],
-        [KeyboardButton("Записаться")],
-        [KeyboardButton("Главное меню")],
-        [KeyboardButton("Стоимость услуг")],
-        [KeyboardButton("Лекции и курсы")],
-        [KeyboardButton("Вопросы по лечению и консультации")]
+        ["Наш сайт"],
+        ["Специалисты"],
+        ["Контакты"],
+        ["Услуги"],
+        ["Оставить отзыв"],
+        ["Записаться"],
+        ["Главное меню"],
+        ["Стоимость услуг"],
+        ["Лекции и курсы"],
+        ["Вопросы по лечению и консультации"]
     ]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True, one_time_keyboard=True, input_field_placeholder="Выберите опцию")
+    return ReplyKeyboardMarkup(
+        buttons,
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        input_field_placeholder="Выберите пункт расширенного меню"
+    )
+
 
 # --- Inline клавиатуры ---
 

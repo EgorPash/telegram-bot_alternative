@@ -4,7 +4,7 @@ import logging
 import os
 
 from aiogram.types import update
-from telegram import Update
+from telegram import Update, ReplyKeyboardRemove
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes, ConversationHandler
 import json
@@ -24,26 +24,24 @@ SURVEY_STATE = {}
 
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Приветствие + фото + контакты + опрос."""
     welcome_text = data['start_message']
     clinic_images = data['clinic_images']
     contact_numbers = data['contact_numbers']
 
-    # Отправляем приветственное сообщение
     await update.message.reply_text(welcome_text)
 
-    # Отправляем фотографии из clinic_images
-    for image_path in clinic_images:
-        if os.path.exists(image_path):
-            with open(image_path, 'rb') as photo:
-                await update.message.reply_photo(photo=photo)
+    for img in clinic_images:
+        if os.path.exists(img):
+            with open(img, 'rb') as ph:
+                await update.message.reply_photo(photo=ph)
         else:
-            logger.warning(f"Фото не найдено: {image_path}")
+            logger.warning(f"Фото не найдено: {img}")
 
-    # Отправляем контактные номера
     await update.message.reply_text(contact_numbers)
 
-    # Запускаем опрос
-    SURVEY_STATE[update.effective_chat.id] = 'waiting_for_response'
+    # ставим опрос
+    SURVEY_STATE[update.effective_chat.id] = "waiting"
     await update.message.reply_text(
         "Чтобы отписаться, нажмите в этот чат \"стоп\".",
         reply_markup=initial_survey_keyboard()
@@ -51,44 +49,61 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Обработчик текстовых сообщений — для опроса
 async def survey_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обрабатывает только первый ответ пользователя после /start."""
     chat_id = update.effective_chat.id
-    user_input = update.message.text.strip().lower()
+    if SURVEY_STATE.get(chat_id) != "waiting":
+        return   # опрос уже закончен – ничего не делаем
 
-    if SURVEY_STATE.get(chat_id) != 'waiting_for_response':
-        return  # Не в опросе — игнорируем
+    text = update.message.text.strip().lower()
+    SURVEY_STATE[chat_id] = None          # выходим из режима опроса
 
-    if user_input == "стоп":
-        SURVEY_STATE[chat_id] = 'completed'
-        await update.message.reply_text("Вы отписались от опроса. Бот больше не будет вас беспокоить.", reply_markup=None)
+    if text == "стоп":
+        await update.message.reply_text(
+            "Вы отписались от опроса. Бот больше не будет вас беспокоить.",
+            reply_markup=ReplyKeyboardRemove()
+        )
         return
 
-    if user_input == "да":
-        SURVEY_STATE[chat_id] = 'completed'
-        await update.message.reply_text("Рады, что мы с вами знакомы! Выберите нужный пункт.", reply_markup=main_menu_keyboard())
+    if text == "да":
+        await update.message.reply_text(
+            "Рады, что мы с вами знакомы! Выберите нужный пункт.",
+            reply_markup=main_menu_keyboard()
+        )
         return
 
-    if user_input == "нет":
-        SURVEY_STATE[chat_id] = 'completed'
+    if text == "нет":
+        # ставим флаг, что пользователь в расширенном меню
+        context.user_data["from_extended_menu"] = True
         await update.message.reply_text(
             "Давайте знакомиться!",
             reply_markup=extended_survey_keyboard()
         )
         return
 
-    # Если ввод не распознан
+    # не распознали
+    SURVEY_STATE[chat_id] = "waiting"   # оставляем в опросе
     await update.message.reply_text(
-        "Пожалуйста, ответьте 'Да', 'Нет' или напишите 'стоп'.",
+        "Пожалуйста, ответьте «Да», «Нет» или «стоп».",
         reply_markup=initial_survey_keyboard()
     )
 
 # --- Обработчики кнопок из расширенного опроса ---
 async def website(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Наш сайт: https://alternative-clinic.ru")
+    text = "Наш сайт: https://alternative-clinic.ru"
+    if context.user_data.get("from_extended_menu"):
+        kb = extended_survey_keyboard()
+    else:
+        main_menu_keyboard()
+    await update.message.reply_text(text, reply_markup=kb)
 
 async def specialists_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = data['specialists']['title']
-    keyboard = specialists_keyboard()
-    await update.message.reply_text(text, reply_markup=keyboard)
+    kb = specialists_keyboard()
+    if context.user_data.get("from_extended_menu"):
+      kb = specialists_keyboard()
+    else:
+        main_menu_keyboard()
+    await update.message.reply_text(text, reply_markup=kb)
 
 async def services_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = data['services']['title']
@@ -96,7 +111,12 @@ async def services_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, reply_markup=keyboard)
 
 async def contacts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(data['contacts'])
+    text = data['contacts']
+    if context.user_data.get("from_extended_menu"):
+        kb = extended_survey_keyboard()
+    else:
+        main_menu_keyboard()
+    await update.message.reply_text(text, reply_markup=kb)
 
 async def leave_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Спасибо за желание оставить отзыв! Пожалуйста, напишите ваш отзыв в этом чате, и мы его обязательно прочитаем.")
@@ -105,13 +125,18 @@ async def appointment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Функция записи будет реализована позже")
 
 async def main_menu_from_survey(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop("from_extended_menu", None)
     await update.message.reply_text("Главное меню:", reply_markup=main_menu_keyboard())
 
 async def cost_services(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Стоимость услуг: подробности на сайте https://alternative-clinic.ru/prices")
+    text = "Прайс-лист находится на сайте в разделе «Цены»."
+    kb = extended_survey_keyboard() if context.user_data.get("from_extended_menu") else main_menu_keyboard()
+    await update.message.reply_text(text, reply_markup=kb)
 
 async def lectures_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Лекции и курсы: следите за обновлениями на сайте и в соцсетях.")
+    text = "Ближайшие курсы и лекции публикуются в нашем Telegram-канале: @alternative_clinic"
+    kb = extended_survey_keyboard() if context.user_data.get("from_extended_menu") else main_menu_keyboard()
+    await update.message.reply_text(text, reply_markup=kb)
 
 async def questions_consultation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Вопросы по лечению и консультации: напишите нам в чат — мы ответим в течение 24 часов.")
